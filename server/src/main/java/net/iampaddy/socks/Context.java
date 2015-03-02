@@ -6,4 +6,7 @@ package net.iampaddy.socks;
  * @author paddy.xie
  */
 public class Context {
+
+    public int port;
+
 }

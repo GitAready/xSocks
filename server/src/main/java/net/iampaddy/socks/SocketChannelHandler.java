@@ -12,14 +12,15 @@ import java.nio.channels.CompletionHandler;
  *
  * @author paddy.xie
  */
-public class AsynchronousSocketChannelHandler implements CompletionHandler<AsynchronousSocketChannel, Context> {
+public class SocketChannelHandler implements CompletionHandler<AsynchronousSocketChannel, Context> {
 
-    private Logger logger = LoggerFactory.getLogger(AsynchronousSocketChannelHandler.class);
+    private Logger logger = LoggerFactory.getLogger(SocketChannelHandler.class);
 
     private AsynchronousServerSocketChannel serverSocketChannel;
     private SocksEngineer socksEngineer;
 
-    public AsynchronousSocketChannelHandler(AsynchronousSocksEngineer socksEngineer, AsynchronousServerSocketChannel serverSocketChannel) {
+    public SocketChannelHandler(AsynchronousSocksEngineer socksEngineer,
+                                AsynchronousServerSocketChannel serverSocketChannel) {
         this.serverSocketChannel = serverSocketChannel;
         this.socksEngineer = socksEngineer;
     }

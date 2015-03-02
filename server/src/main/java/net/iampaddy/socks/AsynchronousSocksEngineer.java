@@ -20,7 +20,7 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
 
     private Logger logger = LoggerFactory.getLogger(AsynchronousSocksEngineer.class);
 
-    private ExecutorService service = null;
+//    private ExecutorService service = null;
     private Lock lock = null;
     private volatile EngineerStatus status;
 
@@ -36,40 +36,50 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
         return new AsynchronousSocksEngineer();
     }
 
-    public void startup() {
+    public void startup(Context context) {
         lock.lock();
+        switchStatus();
         try {
             logger.info("Starting xSocks server...");
 
-            service = new ThreadPoolExecutor(5, 50, 50, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-                    new NamedThreadFactory("SocksWorker"));
+            logger.debug("Initialize socks worker pool");
+//            service = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+//                    new NamedThreadFactory("SocksWorker"));
 
-            service.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        group = AsynchronousChannelGroup.withThreadPool(
-                                Executors.newSingleThreadExecutor(new NamedThreadFactory("SocksAcceptor")));
-                        serverSocketChannel = AsynchronousServerSocketChannel.open(group);
-                        serverSocketChannel.bind(new InetSocketAddress("localhost", 1080), 100);
-                        serverSocketChannel.accept(new Context(), new AsynchronousSocketChannelHandler(AsynchronousSocksEngineer.this, serverSocketChannel));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
+            try {
+                ExecutorService aioThreadPool = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS,
+                        new SynchronousQueue<Runnable>(),
+                        new NamedThreadFactory("SocksAcceptor"));
+                group = AsynchronousChannelGroup.withThreadPool(aioThreadPool);
+                serverSocketChannel = AsynchronousServerSocketChannel.open(group);
+                serverSocketChannel.bind(new InetSocketAddress("localhost", 1080), 100);
+                logger.info("Listening on port 8080");
 
-            logger.info("");
+                serverSocketChannel.accept(new Context(), new SocketChannelHandler(this, serverSocketChannel));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            logger.info("xSocks server started");
         } finally {
+            switchStatus();
             lock.unlock();
         }
     }
 
     public void shutdown() {
         lock.lock();
+        switchStatus();
         try {
-//            serverSocketChannel.
+            try {
+                logger.info("Stop accepting new connection");
+                serverSocketChannel.close();
+            } catch (IOException e) {
+                logger.error("Close server socket channel failed");
+            }
+//            service.shutdown();
         } finally {
+            switchStatus();
             lock.unlock();
         }
     }
@@ -77,7 +87,7 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
     @Override
     public void submit(AsynchronousSocksWork socksWork) {
         isRunning();
-        service.submit(socksWork);
+//        service.submit(socksWork);
 
     }
 
@@ -88,5 +98,23 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
 
     private boolean isRunning() {
         return status == EngineerStatus.RUNNING;
+    }
+
+    private void switchStatus() {
+        switch (status) {
+            case SHUTDOWN:
+                status = EngineerStatus.STARTING;
+                break;
+            case STARTING:
+                status = EngineerStatus.RUNNING;
+                break;
+            case RUNNING:
+                status = EngineerStatus.SHUTING_DOWN;
+                break;
+            case SHUTING_DOWN:
+                status = EngineerStatus.SHUTDOWN;
+                break;
+        }
+        logger.info("Server switched to " + status);
     }
 }

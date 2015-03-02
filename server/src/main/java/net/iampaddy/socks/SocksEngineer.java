@@ -9,7 +9,7 @@ import java.nio.channels.AsynchronousSocketChannel;
  */
 public interface SocksEngineer {
 
-    public void startup();
+    public void startup(Context context);
 
     public void shutdown();
 

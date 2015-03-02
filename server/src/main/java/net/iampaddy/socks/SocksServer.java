@@ -21,7 +21,7 @@ public class SocksServer {
 
     public void startup() {
         SocksEngineer engineer = AsynchronousSocksEngineer.createNewEngineer();
-        engineer.startup();
+        engineer.startup(new Context());
     }
 
 }

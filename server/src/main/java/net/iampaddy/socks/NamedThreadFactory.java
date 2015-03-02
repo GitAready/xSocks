@@ -5,8 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Description
@@ -31,22 +29,20 @@ public class NamedThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable r) {
-        Thread t = new Thread(group, r, threadName + " - " + seq.getAndIncrement()) {
+        Thread t = new Thread(group, r, threadName + "-" + seq.getAndIncrement()) {
             @Override
             public void run() {
-                try {
-                    super.run();
-                } catch(Throwable t) {
-                    logger.error(t.getMessage(), t);
-                }
+                logger.debug(this.getName() + " started");
+                super.run();
+                logger.debug(this.getName() + " stopped");
             }
         };
 
-        if(t.isDaemon()) {
+        if (t.isDaemon()) {
             t.setDaemon(false);
         }
 
-        if(t.getPriority() != Thread.NORM_PRIORITY) {
+        if (t.getPriority() != Thread.NORM_PRIORITY) {
             t.setPriority(Thread.NORM_PRIORITY);
         }
 

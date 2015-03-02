@@ -2,6 +2,7 @@ package net.iampaddy.socks;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
 
 /**
  * Description
@@ -20,10 +21,20 @@ public class AsynchronousSocksWork<S extends AsynchronousSocketChannel, A> imple
 
     @Override
     public void run() {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+        final ByteBuffer buffer = ByteBuffer.allocate(1024);
 
-        socketChannel.read(buffer);
-        buffer.flip();
-        System.out.println(buffer);
+        socketChannel.read(buffer, null, new CompletionHandler<Integer, Object>() {
+            @Override
+            public void completed(Integer result, Object attachment) {
+
+                buffer.flip();
+                System.out.println(buffer);
+            }
+
+            @Override
+            public void failed(Throwable exc, Object attachment) {
+
+            }
+        });
     }
 }
