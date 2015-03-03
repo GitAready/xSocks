@@ -32,6 +32,7 @@ public class SocketChannelHandler implements CompletionHandler<AsynchronousSocke
         serverSocketChannel.accept(context, this);
 
         logger.info("Accept a connection : " + socketChannel);
+//        socketChannel.close();
         socksEngineer.submit(new AsynchronousSocksWork<>(socketChannel, new Context()));
 
     }

@@ -42,19 +42,21 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
         try {
             logger.info("Starting xSocks server...");
 
-            logger.debug("Initialize socks worker pool");
-//            service = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-//                    new NamedThreadFactory("SocksWorker"));
+            logger.info("Initialize socks acceptor thread pool...");
+            ExecutorService acceptorPool = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS,
+                    new SynchronousQueue<Runnable>(),
+                    new NamedThreadFactory("SocksAcceptor"));
+
+            logger.info("Initialize socks worker thread pool...");
+            ExecutorService workerPool = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS,
+                    new SynchronousQueue<Runnable>(),
+                    new NamedThreadFactory("SocksWorker"));
 
             try {
-                ExecutorService aioThreadPool = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS,
-                        new SynchronousQueue<Runnable>(),
-                        new NamedThreadFactory("SocksAcceptor"));
-                group = AsynchronousChannelGroup.withThreadPool(aioThreadPool);
+                group = AsynchronousChannelGroup.withThreadPool(acceptorPool);
                 serverSocketChannel = AsynchronousServerSocketChannel.open(group);
                 serverSocketChannel.bind(new InetSocketAddress("localhost", 1080), 100);
                 logger.info("Listening on port 8080");
-
                 serverSocketChannel.accept(new Context(), new SocketChannelHandler(this, serverSocketChannel));
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -71,13 +73,9 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
         lock.lock();
         switchStatus();
         try {
-            try {
-                logger.info("Stop accepting new connection");
-                serverSocketChannel.close();
-            } catch (IOException e) {
-                logger.error("Close server socket channel failed");
-            }
-//            service.shutdown();
+            // 1. stop accept new connection
+            // 2. determine the internal work
+            // 3.
         } finally {
             switchStatus();
             lock.unlock();
