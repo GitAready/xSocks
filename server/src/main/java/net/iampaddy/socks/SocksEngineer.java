@@ -17,4 +17,6 @@ public interface SocksEngineer {
 
     public EngineerStatus status();
 
+    public boolean isRunning();
+
 }

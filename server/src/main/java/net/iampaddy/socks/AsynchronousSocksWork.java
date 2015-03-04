@@ -27,8 +27,6 @@ public class AsynchronousSocksWork<S extends AsynchronousSocketChannel, A> imple
             @Override
             public void completed(Integer result, Object attachment) {
 
-                buffer.flip();
-                System.out.println(buffer);
             }
 
             @Override

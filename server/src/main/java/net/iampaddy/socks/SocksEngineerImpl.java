@@ -16,48 +16,48 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author paddy.xie
  */
-public class AsynchronousSocksEngineer implements SocksEngineer {
+public class SocksEngineerImpl implements SocksEngineer {
 
-    private Logger logger = LoggerFactory.getLogger(AsynchronousSocksEngineer.class);
+    private Logger logger = LoggerFactory.getLogger(SocksEngineerImpl.class);
 
-//    private ExecutorService service = null;
-    private Lock lock = null;
+    private ExecutorService acceptorPool = null;
+    private Lock statusLock = null;
     private volatile EngineerStatus status;
 
     private AsynchronousChannelGroup group;
     private AsynchronousServerSocketChannel serverSocketChannel;
 
-    private AsynchronousSocksEngineer() {
-        this.lock = new ReentrantLock();
+    private SocksEngineerImpl() {
+        this.statusLock = new ReentrantLock();
         this.status = EngineerStatus.SHUTDOWN;
     }
 
-    public static AsynchronousSocksEngineer createNewEngineer() {
-        return new AsynchronousSocksEngineer();
+    public static SocksEngineerImpl createNewEngineer() {
+        return new SocksEngineerImpl();
     }
 
     public void startup(Context context) {
-        lock.lock();
+        statusLock.lock();
         switchStatus();
         try {
             logger.info("Starting xSocks server...");
 
             logger.info("Initialize socks acceptor thread pool...");
-            ExecutorService acceptorPool = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS,
+            acceptorPool = new ThreadPoolExecutor(1, 20, 50, TimeUnit.SECONDS,
                     new SynchronousQueue<Runnable>(),
                     new NamedThreadFactory("SocksAcceptor"));
 
-            logger.info("Initialize socks worker thread pool...");
-            ExecutorService workerPool = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS,
-                    new SynchronousQueue<Runnable>(),
-                    new NamedThreadFactory("SocksWorker"));
+//            logger.info("Initialize socks worker thread pool...");
+//            ExecutorService workerPool = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS,
+//                    new SynchronousQueue<Runnable>(),
+//                    new NamedThreadFactory("SocksWorker"));
 
             try {
                 group = AsynchronousChannelGroup.withThreadPool(acceptorPool);
                 serverSocketChannel = AsynchronousServerSocketChannel.open(group);
                 serverSocketChannel.bind(new InetSocketAddress("localhost", 1080), 100);
                 logger.info("Listening on port 8080");
-                serverSocketChannel.accept(new Context(), new SocketChannelHandler(this, serverSocketChannel));
+                serverSocketChannel.accept(new Context(), new SocketChannelAcceptHandler(this, serverSocketChannel));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -65,12 +65,12 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
             logger.info("xSocks server started");
         } finally {
             switchStatus();
-            lock.unlock();
+            statusLock.unlock();
         }
     }
 
     public void shutdown() {
-        lock.lock();
+        statusLock.lock();
         switchStatus();
         try {
             // 1. stop accept new connection
@@ -78,7 +78,7 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
             // 3.
         } finally {
             switchStatus();
-            lock.unlock();
+            statusLock.unlock();
         }
     }
 
@@ -91,11 +91,16 @@ public class AsynchronousSocksEngineer implements SocksEngineer {
 
     @Override
     public EngineerStatus status() {
-        return status;
+        statusLock.lock();
+        try {
+            return status;
+        } finally {
+            statusLock.unlock();
+        }
     }
 
-    private boolean isRunning() {
-        return status == EngineerStatus.RUNNING;
+    public boolean isRunning() {
+        return status() == EngineerStatus.RUNNING;
     }
 
     private void switchStatus() {

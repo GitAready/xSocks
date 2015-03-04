@@ -1,10 +1,6 @@
 package net.iampaddy.socks;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.channels.AsynchronousChannelGroup;
-import java.nio.channels.AsynchronousServerSocketChannel;
-import java.util.concurrent.Executors;
 
 public class SocksServer {
 
@@ -20,7 +16,7 @@ public class SocksServer {
     }
 
     public void startup() {
-        SocksEngineer engineer = AsynchronousSocksEngineer.createNewEngineer();
+        SocksEngineer engineer = SocksEngineerImpl.createNewEngineer();
         engineer.startup(new Context());
     }
 

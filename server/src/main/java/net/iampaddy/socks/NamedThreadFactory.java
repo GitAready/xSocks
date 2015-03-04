@@ -35,6 +35,10 @@ public class NamedThreadFactory implements ThreadFactory {
                 logger.debug(this.getName() + " started");
                 super.run();
                 logger.debug(this.getName() + " stopped");
+
+                if(this.getThreadGroup().activeCount() == 0) {
+                    logger.info(this.getThreadGroup().getName() + " shutdown completed");
+                }
             }
         };
 

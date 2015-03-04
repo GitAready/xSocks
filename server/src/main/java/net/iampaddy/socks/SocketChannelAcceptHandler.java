@@ -3,6 +3,7 @@ package net.iampaddy.socks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
@@ -12,15 +13,15 @@ import java.nio.channels.CompletionHandler;
  *
  * @author paddy.xie
  */
-public class SocketChannelHandler implements CompletionHandler<AsynchronousSocketChannel, Context> {
+public class SocketChannelAcceptHandler implements CompletionHandler<AsynchronousSocketChannel, Context> {
 
-    private Logger logger = LoggerFactory.getLogger(SocketChannelHandler.class);
+    private Logger logger = LoggerFactory.getLogger(SocketChannelAcceptHandler.class);
 
     private AsynchronousServerSocketChannel serverSocketChannel;
     private SocksEngineer socksEngineer;
 
-    public SocketChannelHandler(AsynchronousSocksEngineer socksEngineer,
-                                AsynchronousServerSocketChannel serverSocketChannel) {
+    public SocketChannelAcceptHandler(SocksEngineerImpl socksEngineer,
+                                      AsynchronousServerSocketChannel serverSocketChannel) {
         this.serverSocketChannel = serverSocketChannel;
         this.socksEngineer = socksEngineer;
     }
@@ -28,12 +29,15 @@ public class SocketChannelHandler implements CompletionHandler<AsynchronousSocke
     @Override
     public void completed(AsynchronousSocketChannel socketChannel, Context context) {
 
-        // ready for next connection
-        serverSocketChannel.accept(context, this);
-
         logger.info("Accept a connection : " + socketChannel);
-//        socketChannel.close();
-        socksEngineer.submit(new AsynchronousSocksWork<>(socketChannel, new Context()));
+
+        // ready for next connection
+        if(socksEngineer.isRunning()) {
+            serverSocketChannel.accept(context, this);
+        }
+
+        ByteBuffer buffer = ByteBuffer.allocate(100);
+        socketChannel.read(buffer, buffer, new ProtocolDetectHandler(socketChannel));
 
     }
 
