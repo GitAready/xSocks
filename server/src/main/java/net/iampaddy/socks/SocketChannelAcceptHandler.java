@@ -33,7 +33,7 @@ public class SocketChannelAcceptHandler implements CompletionHandler<Asynchronou
 
         // ready for next connection
         if(socksEngineer.isRunning()) {
-            serverSocketChannel.accept(context, this);
+//            serverSocketChannel.accept(context, this);
         }
 
         ByteBuffer buffer = ByteBuffer.allocate(100);

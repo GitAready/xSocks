@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
@@ -53,52 +54,114 @@ public class ProtocolDetectHandler implements CompletionHandler<Integer, ByteBuf
             buffer.clear();
             future = socketChannel.read(buffer);
             future.get();
-            byte[] domainName = new byte[13];
-
             buffer.flip();
             byte[] array = buffer.array();
-            int length = array[4];
-            byte[] address = new byte[length];
+            final int length = array[4];
+            final byte[] address = new byte[length];
             System.arraycopy(array, 5, address, 0, length);
+            String domainName = new String(address);
+            int port = 80;
+
+            try {
+                logger.info("domain: {}", domainName);
+                AsynchronousSocketChannel remoteSocketChannel = AsynchronousSocketChannel.open();
+                remoteSocketChannel.connect(new InetSocketAddress(domainName, port), remoteSocketChannel,
+                        new CompletionHandler<Void, AsynchronousSocketChannel>() {
+                            @Override
+                            public void completed(Void result, AsynchronousSocketChannel remoteSocketChannel) {
+                                ByteBuffer buffer = ByteBuffer.allocate(1024);
+                                buffer.put(new byte[]{0x05, 0x00, 0x00, 0x03, (byte) length});
+                                buffer.put(address);
+                                buffer.put(new byte[]{0x00, (byte) 0x80});
+                                buffer.flip();
+                                Future future = socketChannel.write(buffer);
+                                try {
+                                    future.get();
+
+                                    final ByteBuffer clientBuffer = ByteBuffer.allocate(100);
+                                    socketChannel.read(clientBuffer, remoteSocketChannel, new CompletionHandler<Integer, AsynchronousSocketChannel>() {
+                                        @Override
+                                        public void completed(Integer result, AsynchronousSocketChannel remoteSocketChannel) {
+                                            if(result <=0 ) return;
+                                            clientBuffer.flip();
+                                            final CompletionHandler<Integer, AsynchronousSocketChannel> that = this;
+                                            remoteSocketChannel.write(clientBuffer, remoteSocketChannel, new CompletionHandler<Integer, AsynchronousSocketChannel>() {
+                                                @Override
+                                                public void completed(Integer result, AsynchronousSocketChannel remoteSocketChannel) {
+                                                    clientBuffer.clear();
+                                                    socketChannel.read(clientBuffer, remoteSocketChannel, that);
+                                                }
+
+                                                @Override
+                                                public void failed(Throwable exc, AsynchronousSocketChannel attachment) {
+                                                    logger.error(exc.getMessage(), exc);
+                                                }
+                                            });
+                                        }
+
+                                        @Override
+                                        public void failed(Throwable exc, AsynchronousSocketChannel attachment) {
+                                            logger.error(exc.getMessage(), exc);
+                                        }
+                                    });
+
+                                    final ByteBuffer serverBuffer = ByteBuffer.allocate(1024);
+                                    remoteSocketChannel.read(serverBuffer, socketChannel, new CompletionHandler<Integer, AsynchronousSocketChannel>() {
+                                        @Override
+                                        public void completed(Integer result, final AsynchronousSocketChannel socketChannel) {
+                                            if(result <=0 ) return;
+                                            serverBuffer.flip();
+                                            final CompletionHandler<Integer, AsynchronousSocketChannel> that = this;
+                                            socketChannel.write(serverBuffer, socketChannel, new CompletionHandler<Integer, AsynchronousSocketChannel>() {
+                                                @Override
+                                                public void completed(Integer result, AsynchronousSocketChannel remoteSocketChannel) {
+                                                    serverBuffer.clear();
+                                                    remoteSocketChannel.read(serverBuffer, socketChannel, that);
+                                                }
+
+                                                @Override
+                                                public void failed(Throwable exc, AsynchronousSocketChannel attachment) {
+                                                    logger.error(exc.getMessage(), exc);
+                                                }
+                                            });
+                                        }
+
+                                        @Override
+                                        public void failed(Throwable exc, AsynchronousSocketChannel attachment) {
+                                            logger.error(exc.getMessage(), exc);
+                                        }
+                                    });
+
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void failed(Throwable exc, AsynchronousSocketChannel attachment) {
+
+                            }
+                        });
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             buffer.clear();
-            buffer.put(new byte[]{0x05, 0x00, 0x00, 0x03, (byte) length});
-            buffer.put(address);
-            buffer.put(new byte[]{0x00, (byte) 0x80});
-            buffer.flip();
-            future = socketChannel.write(buffer);
-            future.get();
-            buffer.clear();
-            future = socketChannel.read(buffer);
-            future.get();
-            buffer = ByteBuffer.allocate(1000);
-            buffer.put(("HTTP/1.1 200 OK\n" +
-                    "Connection: keep-alive\n" +
-                    "Date: Thu, 26 Jul 2007 14:00:02 GMT\n" +
-                    "Server: Microsoft-IIS/6.0\n" +
-                    "X-Powered-By: ASP.NET\n" +
-                    "Content-Length: 190\n" +
-                    "Content-Type: text/html\n" +
-                    "Set-Cookie: ASPSESSIONIDSAATTCSQ=JOPPKDCAMHHBEOICJPGPBJOB;\n" +
-                    "path=/\n" +
-                    "Cache-control: private\n" +
-                    "<html>\n" +
-                    "<head>\n" +
-                    "<title>精通Unix下C语言编程</title>\n" +
-                    "</head>\n" +
-                    "<body>\n" +
-                    "<b>精通Unix下C语言编程与项目实战<br></b>\n" +
-                    "<b>投票测试<br></b>\n" +
-                    "感谢你为选手\n" +
-                    "朱云翔\n" +
-                    "投票!\n" +
-                    "</body> \n" +
-                    "</html>").getBytes());
-            buffer.put((byte)-1);
-            buffer.flip();
-            future = socketChannel.write(buffer);
-            future.get();
-//            socketChannel.close();
+
+            new Thread() {
+
+                @Override
+                public void run() {
+
+                    ByteBuffer  buffer = ByteBuffer.allocate(1024);
+                    socketChannel.read(buffer);
+
+                }
+            }.start();
+
+
 
         } catch (InterruptedException e) {
             e.printStackTrace();
