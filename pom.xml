@@ -70,6 +70,13 @@
                 <version>${version.logback}</version>
             </dependency>
 
+            <!-- Netty -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${version.netty}</version>
+            </dependency>
+
             <!-- Apache Commons -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -191,6 +198,11 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec</artifactId>
+        </dependency>
+
         <!-- Apache Commons -->
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -251,6 +263,9 @@
         <!-- Logging Library -->
         <version.slf4j>1.7.6</version.slf4j>
         <version.logback>1.1.2</version.logback>
+
+        <version.netty>4.0.26.Final</version.netty>
+        <version.netty.socks>4.0.24.Final-SNAPSHOT</version.netty.socks>
 
         <version.commons.compress>1.4.1</version.commons.compress>
         <version.commons.beanutils>1.7.0</version.commons.beanutils>

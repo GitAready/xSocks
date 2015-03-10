@@ -1,13 +1,21 @@
 package net.iampaddy.socks;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import net.iampaddy.socks.codec.Socks5AuthCodec;
+import net.iampaddy.socks.handler.FlushHandler;
+import net.iampaddy.socks.handler.Socks5AuthHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -42,25 +50,24 @@ public class SocksEngineerImpl implements SocksEngineer {
         try {
             logger.info("Starting xSocks server...");
 
-            logger.info("Initialize socks acceptor thread pool...");
-            acceptorPool = new ThreadPoolExecutor(1, 20, 50, TimeUnit.SECONDS,
-                    new SynchronousQueue<Runnable>(),
-                    new NamedThreadFactory("SocksAcceptor"));
+            EventLoopGroup acceptorGroup = new NioEventLoopGroup(5, new NamedThreadFactory("SocksAcceptor"));
+            EventLoopGroup workerGroup = new NioEventLoopGroup(5, new NamedThreadFactory("SocksWorker"));
 
-//            logger.info("Initialize socks worker thread pool...");
-//            ExecutorService workerPool = new ThreadPoolExecutor(1, 1, 50, TimeUnit.SECONDS,
-//                    new SynchronousQueue<Runnable>(),
-//                    new NamedThreadFactory("SocksWorker"));
-
-            try {
-                group = AsynchronousChannelGroup.withThreadPool(acceptorPool);
-                serverSocketChannel = AsynchronousServerSocketChannel.open(group);
-                serverSocketChannel.bind(new InetSocketAddress("localhost", 1080), 100);
-                logger.info("Listening on port 8080");
-                serverSocketChannel.accept(new Context(), new SocketChannelAcceptHandler(this, serverSocketChannel));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            ServerBootstrap serverBootstrap = new ServerBootstrap();
+            serverBootstrap.group(acceptorGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 128)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel socketChannel) throws Exception {
+                            socketChannel.pipeline()
+                                    .addLast(FlushHandler.class.getName(), new FlushHandler())
+                                    .addLast(Socks5AuthCodec.class.getName(), new Socks5AuthCodec())
+                                    .addLast(Socks5AuthHandler.class.getName(), new Socks5AuthHandler());
+                        }
+                    })
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    .bind("localhost", 1080);
 
             logger.info("xSocks server started");
         } finally {
