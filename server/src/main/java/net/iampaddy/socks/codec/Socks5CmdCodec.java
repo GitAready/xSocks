@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageCodec;
 import io.netty.util.ReferenceCountUtil;
+import net.iampaddy.socks.handler.RemoteHandler;
+import net.iampaddy.socks.handler.Socks5CmdHandler;
 import net.iampaddy.socks.message.SocksMessage;
 
 import java.util.List;
@@ -25,13 +27,15 @@ public class Socks5CmdCodec extends ByteToMessageCodec<Object> {
         byteBuf.writeBytes(response.getAddressBytes());
         byteBuf.writeBytes(response.getPortBytes());
 
-
-
+        channelHandlerContext.pipeline().remove(Socks5CmdCodec.class.getName());
+        channelHandlerContext.pipeline().remove(Socks5CmdHandler.class.getName());
+        channelHandlerContext.pipeline()
+                .addLast(RemoteHandler.class.getName(), new RemoteHandler());
     }
 
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
-        byte version = byteBuf.readByte();
+        byte version = (byte)byteBuf.readUnsignedByte();
         byte command = byteBuf.readByte();
         byteBuf.readByte(); // reserved
         byte addressType = byteBuf.readByte();
