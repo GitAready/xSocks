@@ -7,6 +7,8 @@ import io.netty.util.ReferenceCountUtil;
 import net.iampaddy.socks.handler.RemoteHandler;
 import net.iampaddy.socks.handler.Socks5CmdHandler;
 import net.iampaddy.socks.message.SocksMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -14,8 +16,12 @@ import java.util.List;
  * Created by Paddy on 3/11/2015.
  */
 public class Socks5CmdCodec extends ByteToMessageCodec<Object> {
+
+    private Logger logger = LoggerFactory.getLogger(Socks5CmdCodec.class);
+
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Object o, ByteBuf byteBuf) throws Exception {
+        logger.info(channelHandlerContext.channel().toString());
         SocksMessage.CommandResponse response = (SocksMessage.CommandResponse)o;
         byteBuf.writeByte(response.getVersion());
         byteBuf.writeByte(response.getReply());
@@ -35,6 +41,8 @@ public class Socks5CmdCodec extends ByteToMessageCodec<Object> {
 
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+        logger.info(channelHandlerContext.channel().toString());
+
         byte version = (byte)byteBuf.readUnsignedByte();
         byte command = byteBuf.readByte();
         byteBuf.readByte(); // reserved
@@ -63,5 +71,6 @@ public class Socks5CmdCodec extends ByteToMessageCodec<Object> {
         SocksMessage.CommandRequest request = new SocksMessage.CommandRequest(version, command, addressType, addressBytes, portBytes);
         list.add(request);
 
+        logger.info("Message : " + request.getAddress());
     }
 }

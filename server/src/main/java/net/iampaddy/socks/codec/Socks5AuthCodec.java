@@ -8,6 +8,8 @@ import net.iampaddy.socks.handler.FlushHandler;
 import net.iampaddy.socks.handler.Socks5AuthHandler;
 import net.iampaddy.socks.handler.Socks5CmdHandler;
 import net.iampaddy.socks.message.SocksMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -16,8 +18,11 @@ import java.util.List;
  */
 public class Socks5AuthCodec extends ByteToMessageCodec<Object> {
 
+    private Logger logger = LoggerFactory.getLogger(FlushHandler.class);
+
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Object o, ByteBuf byteBuf) throws Exception {
+        logger.info(channelHandlerContext.channel().toString());
         SocksMessage.AuthResponse message = (SocksMessage.AuthResponse) o;
         byteBuf.writeByte(message.getVersion());
         byteBuf.writeByte(message.getMethod());
@@ -31,6 +36,7 @@ public class Socks5AuthCodec extends ByteToMessageCodec<Object> {
 
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+        logger.info(channelHandlerContext.channel().toString());
 
         byte version = byteBuf.readByte();
         byte method = byteBuf.readByte();

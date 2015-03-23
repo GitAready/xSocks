@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.AttributeKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,11 +16,14 @@ import java.net.Socket;
  */
 public class RemoteHandler extends ChannelInboundHandlerAdapter {
 
+    private Logger logger = LoggerFactory.getLogger(FlushHandler.class);
+
     private Socket socket = null;
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if(this.socket == null) socket = (Socket)ctx.attr(AttributeKey.newInstance("socket")).get();
+        logger.info(ctx.channel().toString());
+        if(this.socket == null) socket = new Socket("www.baidu.com", 80);
 
         if(socket == null) return;
 
@@ -39,6 +44,8 @@ public class RemoteHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        InputStream is = socket.getInputStream();
+//        InputStream is = socket.getInputStream();
+        logger.info(ctx.channel().toString());
     }
+
 }
