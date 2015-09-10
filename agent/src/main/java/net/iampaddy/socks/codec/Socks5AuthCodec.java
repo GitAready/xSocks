@@ -38,8 +38,8 @@ public class Socks5AuthCodec extends ByteToMessageCodec<Object> {
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
         logger.info(channelHandlerContext.channel().toString());
 
-        byte version = byteBuf.readByte();
-        byte method = byteBuf.readByte();
+        byte version = (byte)byteBuf.readUnsignedByte();
+        byte method = (byte)byteBuf.readUnsignedByte();
         byte[] methods = new byte[method];
         byteBuf.readBytes(methods);
 

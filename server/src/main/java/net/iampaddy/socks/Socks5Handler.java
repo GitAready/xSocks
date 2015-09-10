@@ -25,7 +25,6 @@ public class Socks5Handler implements CompletionHandler<Integer, ByteBuffer> {
         this.socketChannel = socketChannel;
     }
 
-    @Override
     public void completed(Integer result, ByteBuffer buffer) {
         logger.info(socketChannel + " : " + result);
         if(result <= 0) {
@@ -145,7 +144,6 @@ public class Socks5Handler implements CompletionHandler<Integer, ByteBuffer> {
         }
     }
 
-    @Override
     public void failed(Throwable exc, ByteBuffer attachment) {
         logger.error(exc.getMessage(), exc);
     }

@@ -19,20 +19,9 @@ public class AsynchronousSocksWork<S extends AsynchronousSocketChannel, A> imple
         this.attachment = attachment;
     }
 
-    @Override
     public void run() {
         final ByteBuffer buffer = ByteBuffer.allocate(1024);
 
-        socketChannel.read(buffer, null, new CompletionHandler<Integer, Object>() {
-            @Override
-            public void completed(Integer result, Object attachment) {
 
-            }
-
-            @Override
-            public void failed(Throwable exc, Object attachment) {
-
-            }
-        });
     }
 }

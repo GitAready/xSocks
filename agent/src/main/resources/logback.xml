@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%method{0}.%line - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+    <logger name="net.iampaddy" level="TRACE"/>
+
+    <root level="debug">
+        <appender-ref ref="Console" />
+    </root>
+</configuration>

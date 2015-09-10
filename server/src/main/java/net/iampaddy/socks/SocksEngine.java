@@ -7,7 +7,7 @@ import java.nio.channels.AsynchronousSocketChannel;
  *
  * @author paddy.xie
  */
-public interface SocksEngineer {
+public interface SocksEngine {
 
     public void startup(Context context);
 

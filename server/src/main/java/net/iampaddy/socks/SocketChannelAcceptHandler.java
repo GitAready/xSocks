@@ -18,21 +18,20 @@ public class SocketChannelAcceptHandler implements CompletionHandler<Asynchronou
     private Logger logger = LoggerFactory.getLogger(SocketChannelAcceptHandler.class);
 
     private AsynchronousServerSocketChannel serverSocketChannel;
-    private SocksEngineer socksEngineer;
+    private SocksEngine socksEngine;
 
-    public SocketChannelAcceptHandler(SocksEngineerImpl socksEngineer,
+    public SocketChannelAcceptHandler(SocksEngineImpl socksEngineer,
                                       AsynchronousServerSocketChannel serverSocketChannel) {
         this.serverSocketChannel = serverSocketChannel;
-        this.socksEngineer = socksEngineer;
+        this.socksEngine = socksEngineer;
     }
 
-    @Override
     public void completed(AsynchronousSocketChannel socketChannel, Context context) {
 
         logger.info("Accept a connection : " + socketChannel);
 
         // ready for next connection
-        if(socksEngineer.isRunning()) {
+        if(socksEngine.isRunning()) {
             serverSocketChannel.accept(context, this);
         }
 
@@ -41,7 +40,6 @@ public class SocketChannelAcceptHandler implements CompletionHandler<Asynchronou
 
     }
 
-    @Override
     public void failed(Throwable exc, Context attachment) {
         logger.error(exc.getMessage(), exc);
     }

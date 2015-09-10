@@ -27,14 +27,17 @@ public class NamedThreadFactory implements ThreadFactory {
         this.group = new ThreadGroup(threadGroupName);
     }
 
-    @Override
     public Thread newThread(Runnable r) {
         Thread t = new Thread(group, r, threadName + "-" + seq.getAndIncrement()) {
             @Override
             public void run() {
-                logger.debug(this.getName() + " started");
+                if(logger.isTraceEnabled()) {
+                    logger.trace(this.getName() + " started");
+                }
                 super.run();
-                logger.debug(this.getName() + " stopped");
+                if(logger.isTraceEnabled()) {
+                    logger.trace(this.getName() + " stopped");
+                }
 
                 if(this.getThreadGroup().activeCount() == 0) {
                     logger.info(this.getThreadGroup().getName() + " shutdown completed");

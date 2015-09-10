@@ -24,9 +24,9 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author paddy.xie
  */
-public class SocksEngineerImpl implements SocksEngineer {
+public class SocksEngineImpl implements SocksEngine {
 
-    private Logger logger = LoggerFactory.getLogger(SocksEngineerImpl.class);
+    private Logger logger = LoggerFactory.getLogger(SocksEngineImpl.class);
 
     private ExecutorService acceptorPool = null;
     private Lock statusLock = null;
@@ -35,13 +35,13 @@ public class SocksEngineerImpl implements SocksEngineer {
     private AsynchronousChannelGroup group;
     private AsynchronousServerSocketChannel serverSocketChannel;
 
-    private SocksEngineerImpl() {
+    private SocksEngineImpl() {
         this.statusLock = new ReentrantLock();
         this.status = EngineerStatus.SHUTDOWN;
     }
 
-    public static SocksEngineerImpl createNewEngineer() {
-        return new SocksEngineerImpl();
+    public static SocksEngineImpl createNewEngineer() {
+        return new SocksEngineImpl();
     }
 
     public void startup(Context context) {
@@ -60,14 +60,15 @@ public class SocksEngineerImpl implements SocksEngineer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline()
+                            logger.debug("A new Socket connected " + socketChannel);
+                             socketChannel.pipeline()
                                     .addLast(FlushHandler.class.getName(), new FlushHandler())
                                     .addLast(Socks5AuthCodec.class.getName(), new Socks5AuthCodec())
                                     .addLast(Socks5AuthHandler.class.getName(), new Socks5AuthHandler());
                         }
                     })
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
-                    .bind("localhost", 1080);
+                    .bind("192.168.31.2", 1080);
 
             logger.info("xSocks server started");
         } finally {
@@ -89,14 +90,12 @@ public class SocksEngineerImpl implements SocksEngineer {
         }
     }
 
-    @Override
     public void submit(AsynchronousSocksWork socksWork) {
         isRunning();
 //        service.submit(socksWork);
 
     }
 
-    @Override
     public EngineerStatus status() {
         statusLock.lock();
         try {

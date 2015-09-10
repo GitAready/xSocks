@@ -16,7 +16,7 @@ public class SocksServer {
     }
 
     public void startup() {
-        SocksEngineer engineer = SocksEngineerImpl.createNewEngineer();
+        SocksEngine engineer = SocksEngineImpl.createNewEngineer();
         engineer.startup(new Context());
     }
 
