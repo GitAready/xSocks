@@ -51,7 +51,7 @@ public class SocksEngineImpl implements SocksEngine {
             logger.info("Starting xSocks server...");
 
             EventLoopGroup acceptorGroup = new NioEventLoopGroup(5, new NamedThreadFactory("SocksAcceptor"));
-            EventLoopGroup workerGroup = new NioEventLoopGroup(5, new NamedThreadFactory("SocksWorker"));
+            EventLoopGroup workerGroup = new NioEventLoopGroup(1, new NamedThreadFactory("SocksWorker"));
 
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(acceptorGroup, workerGroup)
@@ -61,10 +61,10 @@ public class SocksEngineImpl implements SocksEngine {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             logger.debug("A new Socket connected " + socketChannel);
-                             socketChannel.pipeline()
-                                    .addLast(FlushHandler.class.getName(), new FlushHandler())
-                                    .addLast(Socks5AuthCodec.class.getName(), new Socks5AuthCodec())
-                                    .addLast(Socks5AuthHandler.class.getName(), new Socks5AuthHandler());
+//                             socketChannel.pipeline()
+//                                    .addLast(FlushHandler.class.getName(), new FlushHandler())
+//                                    .addLast(Socks5AuthCodec.class.getName(), new Socks5AuthCodec())
+//                                    .addLast(Socks5AuthHandler.class.getName(), new Socks5AuthHandler());
                         }
                     })
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
