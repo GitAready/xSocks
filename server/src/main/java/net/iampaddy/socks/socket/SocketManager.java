@@ -17,7 +17,7 @@ public class SocketManager {
         lock = new ReentrantLock();
     }
 
-    public Socket getSocket(DestKey destKey) {
+    public Socket connect(DestKey destKey) {
         SocketPool pool = sockets.get(destKey);
         if (pool == null) {
             try {
@@ -32,7 +32,7 @@ public class SocketManager {
                 lock.unlock();
             }
         }
-        return pool.getOne();
+        return pool.connect();
     }
 
 }

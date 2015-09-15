@@ -2,7 +2,6 @@ package net.iampaddy.socks;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
 
 /**
  * Description

@@ -18,13 +18,13 @@ public class SocketPool {
     public void init() {
     }
 
-    public Socket getOne() {
+    public Socket connect() {
         try {
             java.net.Socket socket = new java.net.Socket(destKey.getAddress(), destKey.getPort());
 
             return new Socket(socket, this);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(destKey.toString(), e);
         }
     }
 

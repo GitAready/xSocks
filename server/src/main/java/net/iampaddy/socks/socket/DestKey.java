@@ -48,4 +48,12 @@ public class DestKey {
         result = 31 * result + port;
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "DestKey{" +
+                "address='" + address + '\'' +
+                ", port=" + port +
+                '}';
+    }
 }
