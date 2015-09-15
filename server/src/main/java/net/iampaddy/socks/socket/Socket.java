@@ -19,8 +19,6 @@ public class Socket {
         this.socket = socket;
         this.pool = pool;
 
-
-
         this.valid = true;
         this.createTime = new Date();
         this.lastAccess = null;

@@ -16,6 +16,7 @@ public class FlushHandler extends ChannelOutboundHandlerAdapter {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        logger.info(this.toString());
         logger.info(ctx.channel().toString());
         ctx.writeAndFlush(msg);
     }

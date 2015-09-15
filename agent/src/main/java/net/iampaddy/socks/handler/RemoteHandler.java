@@ -23,23 +23,28 @@ public class RemoteHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         logger.info(ctx.channel().toString());
-        if(this.socket == null) socket = new Socket("www.baidu.com", 80);
-
-        if(socket == null) return;
-
-        OutputStream os = socket.getOutputStream();
+//        if(this.socket == null) socket = new Socket("www.baidu.com", 80);
+//
+//        if(socket == null) return;
+//
+//        OutputStream os = socket.getOutputStream();
+//
+//        ByteBuf byteBuf = (ByteBuf)msg;
+//        byte[] buffer = new byte[1024];
+//        int length;
+//        while((length = byteBuf.readableBytes()) > 0) {
+//            if(length > 1024) {
+//                length = 1024;
+//            }
+//            byteBuf.readBytes(buffer, 0, length);
+//            os.write(buffer, 0, length);
+//        }
 
         ByteBuf byteBuf = (ByteBuf)msg;
-        byte[] buffer = new byte[1024];
-        int length;
-        while((length = byteBuf.readableBytes()) > 0) {
-            if(length > 1024) {
-                length = 1024;
-            }
-            byteBuf.readBytes(buffer, 0, length);
-            os.write(buffer, 0, length);
-        }
-
+        byte[] buffer = new byte[byteBuf.readableBytes()];
+        byteBuf.readBytes(buffer);
+        System.out.println(new String(buffer));
+        ctx.write("result".getBytes());
     }
 
     @Override

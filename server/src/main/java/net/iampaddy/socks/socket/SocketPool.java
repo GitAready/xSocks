@@ -13,7 +13,9 @@ public class SocketPool {
 
     public SocketPool(DestKey destKey) {
         this.destKey = destKey;
+    }
 
+    public void init() {
     }
 
     public Socket getOne() {
@@ -26,12 +28,8 @@ public class SocketPool {
         }
     }
 
-    public void returnOne() {
+    public void freeOne() {
 
     }
 
-    public void init() {
-
-
-    }
 }

@@ -61,14 +61,14 @@ public class SocksEngineImpl implements SocksEngine {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             logger.debug("A new Socket connected " + socketChannel);
-//                             socketChannel.pipeline()
-//                                    .addLast(FlushHandler.class.getName(), new FlushHandler())
-//                                    .addLast(Socks5AuthCodec.class.getName(), new Socks5AuthCodec())
-//                                    .addLast(Socks5AuthHandler.class.getName(), new Socks5AuthHandler());
+                             socketChannel.pipeline()
+                                    .addLast(FlushHandler.class.getName(), new FlushHandler())
+                                    .addLast(Socks5AuthCodec.class.getName(), new Socks5AuthCodec())
+                                    .addLast(Socks5AuthHandler.class.getName(), new Socks5AuthHandler());
                         }
                     })
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
-                    .bind("192.168.31.2", 1080);
+                    .bind("localhost", 1080);
 
             logger.info("xSocks server started");
         } finally {

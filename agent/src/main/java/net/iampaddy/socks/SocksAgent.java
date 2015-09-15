@@ -13,9 +13,10 @@ import net.iampaddy.socks.handler.Socks5AuthHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.*;
 import java.util.Enumeration;
 
 /**
@@ -53,20 +54,41 @@ public class SocksAgent {
 //                .childOption(ChannelOption.TCP_NODELAY, true);
 
         try {
-            NetworkInterface nif;
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            while ((interfaces.hasMoreElements())) {
-                nif = interfaces.nextElement();
-                if (nif.isLoopback() || nif.isPointToPoint() || nif.isVirtual() || !nif.isUp()) {
-                    continue;
-                }
-                Enumeration<InetAddress> addresses = nif.getInetAddresses();
-                while (addresses.hasMoreElements()) {
-                    InetAddress address = addresses.nextElement();
-                    logger.info(nif.getName() + ":" + address.getHostAddress());
-                }
-            }
-        } catch (SocketException e) {
+//            NetworkInterface nif;
+//            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+//            while ((interfaces.hasMoreElements())) {
+//                nif = interfaces.nextElement();
+//                if (nif.isLoopback() || nif.isPointToPoint() || nif.isVirtual() || !nif.isUp()) {
+//                    continue;
+//                }
+//                Enumeration<InetAddress> addresses = nif.getInetAddresses();
+//                while (addresses.hasMoreElements()) {
+//                    InetAddress address = addresses.nextElement();
+//                    logger.info(nif.getName() + ":" + address.getHostAddress());
+//                }
+//            }
+
+            Proxy proxy = new Proxy(Proxy.Type.SOCKS, InetSocketAddress.createUnresolved("localhost", 1080));
+            Socket socket = new Socket(proxy);
+            socket.connect(InetSocketAddress.createUnresolved("www.baidu.com", 80));
+
+            InputStream is = socket.getInputStream();
+            byte[] buffer = new byte[1024];
+            int length = is.read(buffer);
+
+            System.out.println(new String(buffer, 0, length));
+
+            OutputStream os = socket.getOutputStream();
+            os.write("test".getBytes());
+            os.flush();
+
+            buffer = new byte[1024];
+            length = is.read(buffer);
+
+            System.out.println(new String(buffer, 0, length));
+
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
