@@ -126,8 +126,6 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                                 if (is.available() > 0) {
                                     ByteBuf buf = ctx.alloc().buffer();
                                     length = is.read(content);
-                                    String cont = new String(content, 0, length);
-                                    logger.info(cont);
                                     buf.clear();
                                     buf.writeBytes(content, 0, length);
                                     ctx.writeAndFlush(buf);
@@ -152,7 +150,6 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                     if(length > content.length) length = content.length;
                     buf.readBytes(content, 0, length);
                     os.write(content, 0, length);
-                    logger.info(new String(content, 0, length));
                 }
                 os.flush();
                 buf.release();
