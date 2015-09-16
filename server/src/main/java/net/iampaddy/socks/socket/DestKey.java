@@ -51,9 +51,6 @@ public class DestKey {
 
     @Override
     public String toString() {
-        return "DestKey{" +
-                "address='" + address + '\'' +
-                ", port=" + port +
-                '}';
+        return address + ":" + port;
     }
 }

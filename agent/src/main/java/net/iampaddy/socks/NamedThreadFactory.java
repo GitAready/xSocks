@@ -31,15 +31,15 @@ public class NamedThreadFactory implements ThreadFactory {
         Thread t = new Thread(group, r, threadName + "-" + seq.getAndIncrement()) {
             @Override
             public void run() {
-                if(logger.isTraceEnabled()) {
+                if (logger.isTraceEnabled()) {
                     logger.trace(this.getName() + " started");
                 }
                 super.run();
-                if(logger.isTraceEnabled()) {
+                if (logger.isTraceEnabled()) {
                     logger.trace(this.getName() + " stopped");
                 }
 
-                if(this.getThreadGroup().activeCount() == 0) {
+                if (this.getThreadGroup().activeCount() == 0) {
                     logger.info(this.getThreadGroup().getName() + " shutdown completed");
                 }
             }

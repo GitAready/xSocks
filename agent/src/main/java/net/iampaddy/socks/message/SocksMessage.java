@@ -140,7 +140,7 @@ public class SocksMessage {
             this.portBytes = portBytes;
             if (addressType == (byte) 1 || addressType == (byte) 3 || addressType == (byte) 4) {
                 this.address = new String(addressBytes);
-                this.port = ((portBytes[0]&0xff)<<8)+(portBytes[1]&0xff);
+                this.port = ((portBytes[0] & 0xff) << 8) + (portBytes[1] & 0xff);
             }
         }
 

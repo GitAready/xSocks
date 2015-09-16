@@ -7,12 +7,17 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by xpjsk on 2015/9/14.
  */
-public class SocketManager {
+public final class SocketManager {
 
     private Map<DestKey, SocketPool> sockets;
     private ReentrantLock lock;
 
-    public SocketManager() {
+    private final static SocketManager manager = new SocketManager();
+    public static SocketManager getInstance() {
+        return manager;
+    }
+
+    private SocketManager() {
         sockets = new HashMap<>();
         lock = new ReentrantLock();
     }

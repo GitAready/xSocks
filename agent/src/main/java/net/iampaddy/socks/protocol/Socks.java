@@ -5,17 +5,20 @@ package net.iampaddy.socks.protocol;
  *
  * @author paddy.xie
  */
-public class Socks4 {
+public class Socks {
 
     // Version
     public final static byte V4 = 0x04;
+    public final static byte V5 = 0x05;
 
+    public final static byte RESERVED = 0x00;
     public final static byte NULL = 0x00;
     public final static byte NOT_NULL = 0x01;
 
     // Command
     public final static byte CMD_CONNECT = 0x01;
     public final static byte CMD_BIND = 0x02;
+    public final static byte CMD_UDP_ASSOCIATE = 0x01;
 
     // Status
     public final static byte STATUS_GRANTED = 0x5a;
@@ -25,7 +28,7 @@ public class Socks4 {
 
     // Address Type
     public final static byte ATYP_IP_V4 = 0x01;
-    public final static byte ATYP_HOSTNAME=0x03;
+    public final static byte ATYP_HOSTNAME = 0x03;
     public final static byte ATYP_IP_V6 = 0x04;
 
     // Reply field
@@ -41,5 +44,11 @@ public class Socks4 {
     public final static byte REP_UNKNOWN_CMD = 0x07;
     public final static byte REP_UNKNOWN_ATYP = 0x08;
 
+    // Method
+    public final static byte METHOD_NO_AUTH = 0x00;
+    public final static byte METHOD_GSSAPI = 0x01;
+    public final static byte METHOD_USER_PWD = 0x02;
+    public final static byte METHOD_RESERVED = (byte) 0x80;
+    public final static byte METHOD_NONE = (byte) 0xFF;
 
 }

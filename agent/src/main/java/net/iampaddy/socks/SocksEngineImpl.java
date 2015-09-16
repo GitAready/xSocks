@@ -7,10 +7,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import net.iampaddy.socks.codec.Socks5AuthCodec;
 import net.iampaddy.socks.handler.FlushHandler;
 import net.iampaddy.socks.handler.ProtocolHandler;
-import net.iampaddy.socks.handler.Socks5AuthHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static net.iampaddy.socks.EngineerStatus.*;
+import static net.iampaddy.socks.EngineerStatus.SHUTDOWN;
 
 /**
  * Description
@@ -53,8 +51,8 @@ public class SocksEngineImpl implements SocksEngine {
         try {
             logger.info("Starting xSocks server...");
 
-            EventLoopGroup acceptorGroup = new NioEventLoopGroup(5, new NamedThreadFactory("SocksAcceptor"));
-            EventLoopGroup workerGroup = new NioEventLoopGroup(5, new NamedThreadFactory("SocksWorker"));
+            EventLoopGroup acceptorGroup = new NioEventLoopGroup(10, new NamedThreadFactory("SocksAcceptor"));
+            EventLoopGroup workerGroup = new NioEventLoopGroup(10, new NamedThreadFactory("SocksWorker"));
 
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(acceptorGroup, workerGroup)
@@ -64,7 +62,7 @@ public class SocksEngineImpl implements SocksEngine {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             logger.debug("A new Socket connected " + socketChannel);
-                             socketChannel.pipeline()
+                            socketChannel.pipeline()
                                     .addLast(FlushHandler.class.getName(), new FlushHandler())
                                     .addLast(ProtocolHandler.class.getName(), new ProtocolHandler());
                         }
@@ -90,12 +88,6 @@ public class SocksEngineImpl implements SocksEngine {
             switchStatus();
             statusLock.unlock();
         }
-    }
-
-    public void submit(AsynchronousSocksWork socksWork) {
-        isRunning();
-//        service.submit(socksWork);
-
     }
 
     public EngineerStatus status() {
