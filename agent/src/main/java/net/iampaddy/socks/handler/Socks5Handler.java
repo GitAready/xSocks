@@ -48,7 +48,7 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                 b.writeByte(Socks.V5);
                 b.writeByte(Socks.METHOD_NO_AUTH);
                 // method processing
-                ctx.write(b);
+                ctx.writeAndFlush(b);
                 buf.release();
                 method = methodArray[0];
                 state = method == Socks.METHOD_NO_AUTH ? State.REQUEST : State.METHOD_PROCESS;
@@ -88,24 +88,30 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                 buf.readBytes(portBuf);
                 int port = ((portBuf[0] & 0x0FF) << 8) + (portBuf[1] & 0x0FF);
 
+                boolean connected = true;
+                try {
+                    socket = manager.connect(new DestKey(address, port));
+                } catch(Exception e) {
+                    logger.error(e.getMessage(), e);
+                    connected = false;
+                }
+
                 b.writeByte(Socks.V5);
-                if(address.contains("google")) {
+                if(!connected) {
                     b.writeByte(Socks.REP_HOST_UNREACHABLE);
                     b.writeByte(Socks.RESERVED);
                     b.writeByte(atype);
                     b.writeBytes(buffer);
                 } else {
-                    socket = manager.connect(new DestKey(address, port));
                     b.writeByte(Socks.REP_SUCCESS);
                     b.writeByte(Socks.RESERVED);
                     b.writeByte(Socks.ATYP_IP_V4);
                     b.writeBytes(socket.getSocket().getInetAddress().getAddress());
                 }
                 b.writeBytes(portBuf);
-                ctx.write(b);
+                ctx.writeAndFlush(b);
                 buf.release();
-                if(address.contains("google") || address.contains("gstatic")) {
-
+                if(!connected) {
                     return;
                 }
                 state = State.CONNECT;
@@ -124,7 +130,7 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                                     logger.info(cont);
                                     buf.clear();
                                     buf.writeBytes(content, 0, length);
-                                    ctx.write(buf);
+                                    ctx.writeAndFlush(buf);
                                 } else {
 
                                     this.sleep(50);

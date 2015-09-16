@@ -63,7 +63,7 @@ public class SocksEngineImpl implements SocksEngine {
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             logger.debug("A new Socket connected " + socketChannel);
                             socketChannel.pipeline()
-                                    .addLast(FlushHandler.class.getName(), new FlushHandler())
+//                                    .addLast(FlushHandler.class.getName(), new FlushHandler())
                                     .addLast(ProtocolHandler.class.getName(), new ProtocolHandler());
                         }
                     })
