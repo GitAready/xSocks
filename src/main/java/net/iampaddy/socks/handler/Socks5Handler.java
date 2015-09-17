@@ -18,19 +18,13 @@ import java.io.OutputStream;
  */
 public class Socks5Handler extends ChannelInboundHandlerAdapter {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    private enum State {
-        METHOD_SELECT, METHOD_PROCESS, REQUEST, CONNECT
-    }
-
-    private State state = State.METHOD_SELECT;
-    private SocketManager manager = SocketManager.getInstance();
-
-    private int method = 0;
-    private Socket socket;
     OutputStream os;
     InputStream is;
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private State state = State.METHOD_SELECT;
+    private SocketManager manager = SocketManager.getInstance();
+    private int method = 0;
+    private Socket socket;
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -91,13 +85,13 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                 boolean connected = true;
                 try {
                     socket = manager.connect(new DestKey(address, port));
-                } catch(Exception e) {
+                } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                     connected = false;
                 }
 
                 b.writeByte(Socks.V5);
-                if(!connected) {
+                if (!connected) {
                     b.writeByte(Socks.REP_HOST_UNREACHABLE);
                     b.writeByte(Socks.RESERVED);
                     b.writeByte(atype);
@@ -111,7 +105,7 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                 b.writeBytes(portBuf);
                 ctx.writeAndFlush(b);
                 buf.release();
-                if(!connected) {
+                if (!connected) {
                     return;
                 }
                 state = State.CONNECT;
@@ -146,8 +140,8 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                 os = socket.getSocket().getOutputStream();
 
                 int length;
-                while((length = buf.readableBytes()) > 0) {
-                    if(length > content.length) length = content.length;
+                while ((length = buf.readableBytes()) > 0) {
+                    if (length > content.length) length = content.length;
                     buf.readBytes(content, 0, length);
                     os.write(content, 0, length);
                 }
@@ -161,5 +155,9 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         super.channelReadComplete(ctx);
+    }
+
+    private enum State {
+        METHOD_SELECT, METHOD_PROCESS, REQUEST, CONNECT
     }
 }

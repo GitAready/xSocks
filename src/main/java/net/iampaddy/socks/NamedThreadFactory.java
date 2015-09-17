@@ -13,11 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class NamedThreadFactory implements ThreadFactory {
 
-    private Logger logger = LoggerFactory.getLogger(NamedThreadFactory.class);
-
-    private AtomicInteger seq;
-
     private final String threadName;
+    private Logger logger = LoggerFactory.getLogger(NamedThreadFactory.class);
+    private AtomicInteger seq;
     private ThreadGroup group;
 
     public NamedThreadFactory(String threadGroupName) {

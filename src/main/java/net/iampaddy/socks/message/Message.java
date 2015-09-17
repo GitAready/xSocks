@@ -3,7 +3,7 @@ package net.iampaddy.socks.message;
 /**
  * Created by Paddy on 3/10/2015.
  */
-public class SocksMessage {
+public class Message {
 
     public static class AuthRequest {
         private byte version;
@@ -156,6 +156,8 @@ public class SocksMessage {
 
     public static class CommandResponse extends CommandMessage {
 
+        private byte reply;
+
         public CommandResponse(byte version, byte reply, byte addressType, byte[] addressBytes, byte[] portBytes) {
             this.version = version;
             this.reply = reply;
@@ -163,8 +165,6 @@ public class SocksMessage {
             this.addressBytes = addressBytes;
             this.portBytes = portBytes;
         }
-
-        private byte reply;
 
         public byte getReply() {
             return reply;

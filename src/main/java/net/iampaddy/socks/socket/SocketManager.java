@@ -9,17 +9,17 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public final class SocketManager {
 
+    private final static SocketManager manager = new SocketManager();
     private Map<DestKey, SocketPool> sockets;
     private ReentrantLock lock;
-
-    private final static SocketManager manager = new SocketManager();
-    public static SocketManager getInstance() {
-        return manager;
-    }
 
     private SocketManager() {
         sockets = new HashMap<>();
         lock = new ReentrantLock();
+    }
+
+    public static SocketManager getInstance() {
+        return manager;
     }
 
     public Socket connect(DestKey destKey) {

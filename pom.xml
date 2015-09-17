@@ -1,13 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.iampaddy</groupId>
     <artifactId>xSocks</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <version>1.0.0-SNAPSHOT</version>
 
-    <name>xSocks Parent</name>
+    <name>xSocks</name>
     <description>socks server and agent</description>
     <url>https://iampaddy.net/</url>
 
@@ -24,11 +24,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <modules>
-        <module>agent</module>
-        <module>server</module>
-    </modules>
 
     <repositories>
         <repository>
@@ -291,8 +286,8 @@
     </properties>
 
     <organization>
-        <name>SunGard AvantGard Receivables</name>
-        <url>http://www.sungard.com/avantgard</url>
+        <name>Paddy</name>
+        <url>http://iampaddy.net</url>
     </organization>
 
 </project>

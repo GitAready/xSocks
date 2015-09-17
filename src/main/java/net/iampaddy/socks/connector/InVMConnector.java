@@ -1,23 +1,26 @@
-package net.iampaddy.socks.acceptor;
+package net.iampaddy.socks.connector;
 
 import io.netty.buffer.ByteBuf;
 
+import java.util.Properties;
+
 /**
- * Created by xpjsk on 2015/9/16.
+ * Created by paddy.xie on 2015/9/17.
  */
-public class RemoteAcceptor implements Acceptor {
-    @Override
-    public void accept() {
+public class InVMConnector implements Connector {
+
+
+    public InVMConnector(Properties prop) {
 
     }
 
     @Override
-    public void close() {
+    public void connect() {
 
     }
 
     @Override
-    public void closeImmediately() {
+    public void disconnect() {
 
     }
 

@@ -7,45 +7,65 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import net.iampaddy.socks.handler.FlushHandler;
+import net.iampaddy.socks.connector.Connector;
+import net.iampaddy.socks.dns.DNSResolver;
 import net.iampaddy.socks.handler.ProtocolHandler;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.channels.AsynchronousChannelGroup;
-import java.nio.channels.AsynchronousServerSocketChannel;
-import java.util.concurrent.ExecutorService;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static net.iampaddy.socks.EngineerStatus.SHUTDOWN;
 
 /**
  * Description
  *
  * @author paddy.xie
  */
-public class SocksEngineImpl implements SocksEngine {
+public class SocksAgent {
 
-    private Logger logger = LoggerFactory.getLogger(SocksEngineImpl.class);
+    private Logger logger = LoggerFactory.getLogger(SocksAgent.class);
 
-    private ExecutorService acceptorPool = null;
-    private Lock statusLock = null;
-    private volatile EngineerStatus status;
+    private Lock statusLock;
+    private volatile Status status;
 
-    private AsynchronousChannelGroup group;
-    private AsynchronousServerSocketChannel serverSocketChannel;
+    private Configuration conf;
 
-    private SocksEngineImpl() {
+    private SocksAgent(Configuration conf) {
         this.statusLock = new ReentrantLock();
-        this.status = SHUTDOWN;
+        this.status = Status.SHUTDOWN;
+
+        this.conf = conf;
     }
 
-    public static SocksEngineImpl createNewEngineer() {
-        return new SocksEngineImpl();
+    public static void main(String[] args) {
+        InputStream is = null;
+        Properties prop = new Properties();
+        try {
+            is = SocksAgent.class.getResourceAsStream("agent.properties");
+            prop.load(is);
+        } catch (IOException e) {
+            throw new RuntimeException("Loading conf file failed...");
+        } finally {
+            IOUtils.closeQuietly(is);
+        }
+
+        Configuration conf = new Configuration(prop);
+        SocksAgent agent = new SocksAgent(conf);
+        agent.start();
     }
 
-    public void startup(Context context) {
+    public void start() {
+        List<Connector> conn = conf.getConnector();
+        DNSResolver resolver = conf.getDNSResolver();
+    }
+
+    public void startup() {
         statusLock.lock();
         switchStatus();
         try {
@@ -63,7 +83,6 @@ public class SocksEngineImpl implements SocksEngine {
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             logger.debug("A new Socket connected " + socketChannel);
                             socketChannel.pipeline()
-//                                    .addLast(FlushHandler.class.getName(), new FlushHandler())
                                     .addLast(ProtocolHandler.class.getName(), new ProtocolHandler());
                         }
                     })
@@ -90,7 +109,7 @@ public class SocksEngineImpl implements SocksEngine {
         }
     }
 
-    public EngineerStatus status() {
+    public Status status() {
         statusLock.lock();
         try {
             return status;
@@ -100,24 +119,32 @@ public class SocksEngineImpl implements SocksEngine {
     }
 
     public boolean isRunning() {
-        return status() == EngineerStatus.RUNNING;
+        return status() == Status.RUNNING;
     }
 
     private void switchStatus() {
         switch (status) {
             case SHUTDOWN:
-                status = EngineerStatus.STARTING;
+                status = Status.STARTING;
                 break;
             case STARTING:
-                status = EngineerStatus.RUNNING;
+                status = Status.RUNNING;
                 break;
             case RUNNING:
-                status = EngineerStatus.SHUTING_DOWN;
+                status = Status.SHUTTING_DOWN;
                 break;
-            case SHUTING_DOWN:
-                status = SHUTDOWN;
+            case SHUTTING_DOWN:
+                status = Status.SHUTDOWN;
                 break;
         }
         logger.info("Server switched to " + status);
     }
+
+    private enum Status {
+
+        SHUTDOWN, STARTING, RUNNING, SHUTTING_DOWN
+
+
+    }
+
 }
