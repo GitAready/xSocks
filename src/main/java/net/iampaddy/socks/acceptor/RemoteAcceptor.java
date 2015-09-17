@@ -3,7 +3,9 @@ package net.iampaddy.socks.acceptor;
 import io.netty.buffer.ByteBuf;
 
 /**
- * Created by xpjsk on 2015/9/16.
+ * Description here
+ *
+ * @author paddy.xie
  */
 public class RemoteAcceptor implements Acceptor {
 

@@ -4,7 +4,9 @@ import io.netty.buffer.ByteBuf;
 import net.iampaddy.socks.SocksServer;
 
 /**
- * Created by xpjsk on 2015/9/16.
+ * Description here
+ *
+ * @author paddy.xie
  */
 public class InVMAcceptor implements Acceptor {
     @Override

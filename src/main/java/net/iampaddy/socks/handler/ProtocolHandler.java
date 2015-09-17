@@ -6,7 +6,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.iampaddy.socks.protocol.Socks;
 
 /**
- * Created by xpjsk on 2015/9/15.
+ * Description here
+ *
+ * @author paddy.xie
  */
 public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 

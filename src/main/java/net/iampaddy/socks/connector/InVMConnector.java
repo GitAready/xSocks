@@ -5,7 +5,9 @@ import io.netty.buffer.ByteBuf;
 import java.util.Properties;
 
 /**
- * Created by paddy.xie on 2015/9/17.
+ * Description here
+ *
+ * @author paddy.xie
  */
 public class InVMConnector implements Connector {
 

@@ -5,7 +5,9 @@ import net.iampaddy.socks.io.Writable;
 import net.iampaddy.socks.io.Readable;
 
 /**
- * Created by xpjsk on 2015/9/16.
+ * Description here
+ *
+ * @author paddy.xie
  */
 public interface Connector extends Readable, Writable {
 

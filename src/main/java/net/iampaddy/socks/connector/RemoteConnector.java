@@ -3,7 +3,9 @@ package net.iampaddy.socks.connector;
 import io.netty.buffer.ByteBuf;
 
 /**
- * Created by xpjsk on 2015/9/16.
+ * Description here
+ *
+ * @author paddy.xie
  */
 public class RemoteConnector implements Connector {
     @Override

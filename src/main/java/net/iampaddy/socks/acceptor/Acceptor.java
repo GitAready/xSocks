@@ -4,7 +4,9 @@ import net.iampaddy.socks.io.Readable;
 import net.iampaddy.socks.io.Writable;
 
 /**
- * Created by xpjsk on 2015/9/16.
+ * Description here
+ *
+ * @author paddy.xie
  */
 public interface Acceptor extends Readable, Writable {
 
