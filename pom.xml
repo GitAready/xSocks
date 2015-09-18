@@ -4,8 +4,11 @@
 
     <groupId>net.iampaddy</groupId>
     <artifactId>xSocks</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <version>1.0.0-SNAPSHOT</version>
+    <modules>
+        <module>../xPool</module>
+    </modules>
 
     <name>xSocks</name>
     <description>socks server and agent</description>

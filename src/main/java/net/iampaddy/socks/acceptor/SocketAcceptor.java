@@ -1,7 +1,6 @@
 package net.iampaddy.socks.acceptor;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -18,13 +17,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author paddy.xie
  */
-public class RemoteAcceptor implements Acceptor {
+public class SocketAcceptor implements Acceptor {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private ServerBootstrap serverBootstrap;
 
-    public RemoteAcceptor() {
+    public SocketAcceptor() {
 
         EventLoopGroup acceptorGroup = new NioEventLoopGroup(10, new NamedThreadFactory("SocksAcceptor"));
         EventLoopGroup workerGroup = new NioEventLoopGroup(10, new NamedThreadFactory("SocksWorker"));
@@ -60,38 +59,4 @@ public class RemoteAcceptor implements Acceptor {
 
     }
 
-    @Override
-    public int read(ByteBuf buffer) {
-        return 0;
-    }
-
-    @Override
-    public int read(byte[] buffer) {
-        return 0;
-    }
-
-    @Override
-    public void writeByte(byte b) {
-
-    }
-
-    @Override
-    public void writeBytes(byte[] buffer) {
-
-    }
-
-    @Override
-    public void writeBytes(byte[] buffer, int offset, int length) {
-
-    }
-
-    @Override
-    public void writeAndFlush(ByteBuf buffer) {
-
-    }
-
-    @Override
-    public void flush() {
-
-    }
 }

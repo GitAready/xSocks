@@ -1,19 +1,11 @@
 package net.iampaddy.socks.connector;
 
-import java.util.Properties;
-
 /**
  * Description here
  *
  * @author paddy.xie
  */
-public class InVMConnector implements Connector {
-
-
-    public InVMConnector(Properties prop) {
-
-    }
-
+public class SocketConnector implements Connector {
     @Override
     public void connect() {
 

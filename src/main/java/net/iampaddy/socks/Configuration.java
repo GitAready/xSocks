@@ -1,5 +1,6 @@
 package net.iampaddy.socks;
 
+import net.iampaddy.socks.acceptor.Acceptor;
 import net.iampaddy.socks.connector.Connector;
 import net.iampaddy.socks.dns.DNSResolver;
 import org.apache.commons.lang.StringUtils;
@@ -12,6 +13,7 @@ public class Configuration {
     private Properties props;
     private List<Connector> connector;
     private DNSResolver resolver;
+    private List<Acceptor> acceptor;
 
     public Configuration(Properties props) {
         this.props = props;
@@ -55,5 +57,9 @@ public class Configuration {
 
     public DNSResolver getDNSResolver() {
         return resolver;
+    }
+
+    public List<Acceptor> getAcceptor() {
+        return acceptor;
     }
 }
