@@ -1,7 +1,9 @@
 package net.iampaddy.socks.socket;
 
 /**
- * Created by xpjsk on 2015/9/14.
+ * Description Here
+ *
+ * @author paddy.xie
  */
 public class DestKey {
 

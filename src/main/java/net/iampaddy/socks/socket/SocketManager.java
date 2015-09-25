@@ -1,11 +1,14 @@
 package net.iampaddy.socks.socket;
 
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Created by xpjsk on 2015/9/14.
+ * Description Here
+ *
+ * @author paddy.xie
  */
 public final class SocketManager {
 
@@ -22,22 +25,14 @@ public final class SocketManager {
         return manager;
     }
 
-    public Socket connect(DestKey destKey) {
-        SocketPool pool = sockets.get(destKey);
-        if (pool == null) {
-            try {
-                lock.lock();
-                pool = sockets.get(destKey);
-                if (pool == null) {
-                    pool = new SocketPool(destKey);
-                    pool.init();
-                    sockets.put(destKey, pool);
-                }
-            } finally {
-                lock.unlock();
-            }
+    public Socket connect(DestKey key) {
+        SocketPool pool = sockets.get(key);
+        if(pool == null) {
+            pool = new SocketPool(new SocketFactory(key));
+            sockets.put(key, pool);
         }
-        return pool.connect();
+        return pool.get();
     }
+
 
 }
