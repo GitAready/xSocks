@@ -1,5 +1,8 @@
 package net.iampaddy.socks.socket;
 
+import net.iampaddy.pool.DefaultResourcePool;
+import net.iampaddy.pool.ResourcePool;
+
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public final class SocketManager {
 
     private final static SocketManager manager = new SocketManager();
-    private Map<DestKey, SocketPool> sockets;
+    private Map<DestKey, ResourcePool<Socket>> sockets;
     private ReentrantLock lock;
 
     private SocketManager() {
@@ -26,12 +29,12 @@ public final class SocketManager {
     }
 
     public Socket connect(DestKey key) {
-        SocketPool pool = sockets.get(key);
+        ResourcePool<Socket> pool = sockets.get(key);
         if(pool == null) {
-            pool = new SocketPool(new SocketFactory(key));
+            pool = new DefaultResourcePool<>(new SocketFactory(key));
             sockets.put(key, pool);
         }
-        return pool.get();
+        return (Socket)pool.get();
     }
 
 
