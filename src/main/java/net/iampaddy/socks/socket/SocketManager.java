@@ -31,7 +31,7 @@ public final class SocketManager {
     public Socket connect(DestKey key) {
         ResourcePool<Socket> pool = sockets.get(key);
         if(pool == null) {
-            pool = new DefaultResourcePool<>(new SocketFactory(key));
+            pool = new DefaultResourcePool<>(null, new SocketFactory(key));
             sockets.put(key, pool);
         }
         return (Socket)pool.get();
