@@ -10,7 +10,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import net.iampaddy.socks.connector.Connector;
 import net.iampaddy.socks.dns.DNSResolver;
 import net.iampaddy.socks.handler.ProtocolHandler;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +33,8 @@ public class SocksAgent {
     private Lock statusLock;
     private volatile Status status;
 
+    private ServerBootstrap serverBootstrap;
+
     private Configuration conf;
 
     private SocksAgent(Configuration conf) {
@@ -44,46 +45,49 @@ public class SocksAgent {
     }
 
     public static void main(String[] args) {
-        InputStream is = null;
         Properties prop = new Properties();
-        try {
-            is = SocksAgent.class.getResourceAsStream("agent.properties");
+
+        try (InputStream is = SocksAgent.class.getResourceAsStream("/xsocks.conf")) {
             prop.load(is);
         } catch (IOException e) {
             throw new RuntimeException("Loading conf file failed...");
-        } finally {
-            IOUtils.closeQuietly(is);
         }
 
         Configuration conf = new Configuration(prop);
-        SocksAgent agent = new SocksAgent(conf);
-        agent.start();
-    }
+        final SocksAgent agent = new SocksAgent(conf);
+        agent.startup();
 
-    public void start() {
-        List<Connector> conn = conf.getConnector();
-        DNSResolver resolver = conf.getDNSResolver();
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                agent.shutdown();
+            }
+        });
     }
 
     public void startup() {
+        List<Connector> conns = conf.getConnector();
+        DNSResolver resolver = conf.getDNSResolver();
+
         statusLock.lock();
-        switchStatus();
         try {
             logger.info("Starting xSocks server...");
+            switchStatus();
 
-            EventLoopGroup acceptorGroup = new NioEventLoopGroup(10, new NamedThreadFactory("SocksAcceptor"));
-            EventLoopGroup workerGroup = new NioEventLoopGroup(10, new NamedThreadFactory("SocksWorker"));
+            EventLoopGroup acceptorGroup = new NioEventLoopGroup(conf.getInteger("agent.acceptor"), new NamedThreadFactory("SocksAcceptor"));
+            EventLoopGroup workerGroup = new NioEventLoopGroup(conf.getInteger("agent.worker"), new NamedThreadFactory("SocksWorker"));
 
-            ServerBootstrap serverBootstrap = new ServerBootstrap();
+            serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(acceptorGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            logger.debug("A new Socket connected " + socketChannel);
-                            socketChannel.pipeline()
-                                    .addLast(ProtocolHandler.class.getName(), new ProtocolHandler());
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("A new Socket connected " + socketChannel);
+                            }
+                            socketChannel.pipeline().addLast(ProtocolHandler.class.getName(), new ProtocolHandler());
                         }
                     })
                     .childOption(ChannelOption.TCP_NODELAY, true)
@@ -101,6 +105,7 @@ public class SocksAgent {
         switchStatus();
         try {
             // 1. stop accept new connection
+            serverBootstrap.group().shutdownGracefully();
             // 2. determine the internal work
             // 3.
         } finally {

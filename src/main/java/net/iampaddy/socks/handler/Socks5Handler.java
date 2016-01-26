@@ -5,13 +5,16 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.iampaddy.socks.protocol.Socks;
 import net.iampaddy.socks.socket.DestKey;
-import net.iampaddy.socks.socket.Socket;
 import net.iampaddy.socks.socket.SocketManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
 
 /**
  * Description here
@@ -20,13 +23,14 @@ import java.io.OutputStream;
  */
 public class Socks5Handler extends ChannelInboundHandlerAdapter {
 
-    OutputStream os;
-    InputStream is;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     private State state = State.METHOD_SELECT;
     private SocketManager manager = SocketManager.getInstance();
     private int method = 0;
-    private Socket socket;
+
+    private DestKey destKey;
+    private AsynchronousSocketChannel remoteChannel;
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -86,7 +90,8 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
 
                 boolean connected = true;
                 try {
-                    socket = manager.connect(new DestKey(address, port));
+                    destKey = new DestKey(address, port);
+                    remoteChannel = manager.connect(destKey);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                     connected = false;
@@ -102,7 +107,7 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                     b.writeByte(Socks.REP_SUCCESS);
                     b.writeByte(Socks.RESERVED);
                     b.writeByte(Socks.ATYP_IP_V4);
-                    b.writeBytes(socket.getSocket().getInetAddress().getAddress());
+                    b.writeBytes(((InetSocketAddress) remoteChannel.getRemoteAddress()).getAddress().getAddress());
                 }
                 b.writeBytes(portBuf);
                 ctx.writeAndFlush(b);
@@ -111,43 +116,26 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                     return;
                 }
                 state = State.CONNECT;
-                new Thread() {
+                final ByteBuffer byteBuffer = ByteBuffer.allocate(2048);
+                remoteChannel.read(byteBuffer, ctx, new CompletionHandler<Integer, ChannelHandlerContext>() {
                     @Override
-                    public void run() {
-                        try {
-                            byte[] content = new byte[1024];
-                            int length;
-                            is = socket.getSocket().getInputStream();
-                            while (true) {
-                                if (is.available() > 0) {
-                                    ByteBuf buf = ctx.alloc().buffer();
-                                    length = is.read(content);
-                                    buf.clear();
-                                    buf.writeBytes(content, 0, length);
-                                    ctx.writeAndFlush(buf);
-                                } else {
-
-                                    this.sleep(50);
-                                }
-
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                    public void completed(Integer result, ChannelHandlerContext attachment) {
+                        ByteBuf buf = attachment.alloc().buffer();
+                        buf.readBytes(byteBuffer);
+                        attachment.writeAndFlush(buf);
+                        byteBuffer.rewind();
                     }
-                }.start();
+
+                    @Override
+                    public void failed(Throwable exc, ChannelHandlerContext attachment) {
+                        System.out.println("async read failed");
+                    }
+                });
                 break;
             case CONNECT:
-                byte[] content = new byte[1024];
-                os = socket.getSocket().getOutputStream();
-
-                int length;
-                while ((length = buf.readableBytes()) > 0) {
-                    if (length > content.length) length = content.length;
-                    buf.readBytes(content, 0, length);
-                    os.write(content, 0, length);
+                while (buf.readableBytes() > 0) {
+                    remoteChannel.write(buf.nioBuffer()).get();
                 }
-                os.flush();
                 buf.release();
             default:
         }
@@ -157,6 +145,27 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         super.channelReadComplete(ctx);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        manager.disconnect(destKey, remoteChannel);
+        System.out.println(ctx.channel() + " channel inactive");
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        System.out.println(ctx.channel() + " channel unregistered");
+    }
+
+    @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        System.out.println(ctx.channel() + " channel registered");
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println(ctx.channel() + " channel active");
     }
 
     private enum State {

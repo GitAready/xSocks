@@ -5,7 +5,7 @@ package net.iampaddy.socks.protocol;
  *
  * @author paddy.xie
  */
-public class Socks {
+public final class Socks {
 
     // Version
     public final static byte V4 = 0x04;

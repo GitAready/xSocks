@@ -7,7 +7,17 @@
         </encoder>
     </appender>
 
-    <logger name="net.iampaddy" level="TRACE"/>
+    <appender name="Mongo" class="net.iampaddy.socks.log.MongoAppender">
+        <host>localhost</host>
+        <port>27017</port>
+        <database>xSocks</database>
+        <collection>logs</collection>
+        <clear>true</clear>
+    </appender>
+
+    <logger name="net.iampaddy" level="TRACE">
+        <!--<appender-ref ref="Mongo"/>-->
+    </logger>
 
     <root level="info">
         <appender-ref ref="Console"/>

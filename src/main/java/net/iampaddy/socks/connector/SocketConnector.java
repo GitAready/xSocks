@@ -6,6 +6,7 @@ package net.iampaddy.socks.connector;
  * @author paddy.xie
  */
 public class SocketConnector implements Connector {
+
     @Override
     public void connect() {
 
