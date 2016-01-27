@@ -28,7 +28,7 @@ public class PooledChannel extends DefaultPooledObject<AsynchronousSocketChannel
 
 
     public DestKey getDestKey() {
-        return this.getDestKey();
+        return this.destKey;
     }
 
 }

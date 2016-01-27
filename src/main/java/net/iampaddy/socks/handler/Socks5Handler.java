@@ -5,12 +5,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.iampaddy.socks.protocol.Socks;
 import net.iampaddy.socks.socket.DestKey;
+import net.iampaddy.socks.socket.RemoteReadHandler;
 import net.iampaddy.socks.socket.SocketManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -35,111 +34,115 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf buf = (ByteBuf) msg;
-        ByteBuf b = ctx.alloc().buffer();
-        switch (state) {
-            case METHOD_SELECT:
-                if (buf.readableBytes() <= 2) return;
-                buf.readByte(); // version
-                byte methods = buf.readByte();
-                if (methods > buf.readableBytes()) return;
-                byte[] methodArray = new byte[methods];
-                buf.readBytes(methodArray);
+        for (; ; ) {
+            ByteBuf b = ctx.alloc().buffer();
+            switch (state) {
+                case METHOD_SELECT:
+                    if (buf.readableBytes() <= 2)
+                        return;
+                    buf.readByte(); // version
+                    byte methods = buf.readByte();
+                    if (methods > buf.readableBytes())
+                        return;
+                    byte[] methodArray = new byte[methods];
+                    buf.readBytes(methodArray);
 
-                b.writeByte(Socks.V5);
-                b.writeByte(Socks.METHOD_NO_AUTH);
-                // method processing
-                ctx.writeAndFlush(b);
-                buf.release();
-                method = methodArray[0];
-                state = method == Socks.METHOD_NO_AUTH ? State.REQUEST : State.METHOD_PROCESS;
-                break;
-            case METHOD_PROCESS:
-                if (method == Socks.METHOD_NO_AUTH) {
-                    state = State.REQUEST;
-                    return;
-                }
-                break;
-            case REQUEST:
-                if (buf.readableBytes() < 4) return;
-                buf.readByte(); // version
-                byte cmd = buf.readByte();
-                buf.readByte(); // reserved
-                byte atype = buf.readByte();
-                String address;
-                byte[] buffer;
-                switch (atype) {
-                    case Socks.ATYP_IP_V4:
-                        buffer = new byte[4];
-                        buf.readBytes(buffer);
-                        break;
-                    case Socks.ATYP_HOSTNAME:
-                        short length = buf.readUnsignedByte();
-                        buffer = new byte[length];
-                        break;
-                    case Socks.ATYP_IP_V6:
-                        buffer = new byte[16];
-                        break;
-                    default:
-                        throw new RuntimeException("Invalid Address Type");
-                }
-                buf.readBytes(buffer);
-                address = new String(buffer);
-                byte[] portBuf = new byte[2];
-                buf.readBytes(portBuf);
-                int port = ((portBuf[0] & 0x0FF) << 8) + (portBuf[1] & 0x0FF);
+                    b.writeByte(Socks.V5);
+                    b.writeByte(Socks.METHOD_NO_AUTH);
+                    // method processing
+                    ctx.writeAndFlush(b);
+                    buf.release();
+                    method = methodArray[0];
+                    state = method == Socks.METHOD_NO_AUTH ? State.REQUEST : State.METHOD_PROCESS;
 
-                boolean connected = true;
-                try {
-                    destKey = new DestKey(address, port);
-                    remoteChannel = manager.connect(destKey);
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                    connected = false;
-                }
+                    info("socks method selected");
+                    break;
+                case METHOD_PROCESS:
+                    if (method == Socks.METHOD_NO_AUTH) {
+                        state = State.REQUEST;
+                        return;
+                    }
+                    break;
+                case REQUEST:
+                    if (buf.readableBytes() < 4)
+                        return;
+                    buf.readByte(); // version
+                    byte cmd = buf.readByte();
+                    buf.readByte(); // reserved
+                    byte atype = buf.readByte();
+                    String address;
+                    byte[] buffer;
+                    switch (atype) {
+                        case Socks.ATYP_IP_V4:
+                            buffer = new byte[4];
+                            buf.readBytes(buffer);
+                            break;
+                        case Socks.ATYP_HOSTNAME:
+                            short length = buf.readUnsignedByte();
+                            buffer = new byte[length];
+                            break;
+                        case Socks.ATYP_IP_V6:
+                            buffer = new byte[16];
+                            break;
+                        default:
+                            throw new RuntimeException("Invalid Address Type");
+                    }
+                    buf.readBytes(buffer);
+                    address = new String(buffer);
+                    byte[] portBuf = new byte[2];
+                    buf.readBytes(portBuf);
+                    int port = ((portBuf[0] & 0x0FF) << 8) + (portBuf[1] & 0x0FF);
 
-                b.writeByte(Socks.V5);
-                if (!connected) {
-                    b.writeByte(Socks.REP_HOST_UNREACHABLE);
-                    b.writeByte(Socks.RESERVED);
-                    b.writeByte(atype);
-                    b.writeBytes(buffer);
-                } else {
-                    b.writeByte(Socks.REP_SUCCESS);
-                    b.writeByte(Socks.RESERVED);
-                    b.writeByte(Socks.ATYP_IP_V4);
-                    b.writeBytes(((InetSocketAddress) remoteChannel.getRemoteAddress()).getAddress().getAddress());
-                }
-                b.writeBytes(portBuf);
-                ctx.writeAndFlush(b);
-                buf.release();
-                if (!connected) {
-                    return;
-                }
-                state = State.CONNECT;
-                final ByteBuffer byteBuffer = ByteBuffer.allocate(2048);
-                remoteChannel.read(byteBuffer, ctx, new CompletionHandler<Integer, ChannelHandlerContext>() {
-                    @Override
-                    public void completed(Integer result, ChannelHandlerContext attachment) {
-                        ByteBuf buf = attachment.alloc().buffer();
-                        buf.readBytes(byteBuffer);
-                        attachment.writeAndFlush(buf);
-                        byteBuffer.rewind();
+                    boolean connected = true;
+                    try {
+                        destKey = new DestKey(address, port);
+                        remoteChannel = manager.connect(destKey);
+                    } catch (Exception e) {
+                        logger.error(e.getMessage(), e);
+                        connected = false;
                     }
 
-                    @Override
-                    public void failed(Throwable exc, ChannelHandlerContext attachment) {
-                        System.out.println("async read failed");
+                    b.writeByte(Socks.V5);
+                    if (!connected) {
+                        b.writeByte(Socks.REP_HOST_UNREACHABLE);
+                        b.writeByte(Socks.RESERVED);
+                        b.writeByte(atype);
+                        b.writeBytes(buffer);
+                    } else {
+                        b.writeByte(Socks.REP_SUCCESS);
+                        b.writeByte(Socks.RESERVED);
+                        b.writeByte(Socks.ATYP_IP_V4);
+                        b.writeBytes(((InetSocketAddress) remoteChannel.getRemoteAddress()).getAddress().getAddress());
                     }
-                });
-                break;
-            case CONNECT:
-                while (buf.readableBytes() > 0) {
-                    remoteChannel.write(buf.nioBuffer()).get();
-                }
-                buf.release();
-            default:
+                    b.writeBytes(portBuf);
+                    ctx.writeAndFlush(b);
+                    buf.release();
+                    if (!connected) {
+                        return;
+                    }
+                    state = State.CONNECT;
+                    final ByteBuffer byteBuffer = ByteBuffer.allocate(10240);
+                    remoteChannel.read(byteBuffer, byteBuffer, new RemoteReadHandler(destKey, ctx, remoteChannel));
+                    info("socks request completed");
+                    break;
+                case CONNECT:
+                    if (buf.readableBytes() > 0) {
+                        try {
+                            info("sending data " + buf.readableBytes());
+                            remoteChannel.write(buf.nioBuffer()).get();
+                            buf.clear();
+                            buf.release();
+                        } catch (Exception e) {
+                            ctx.close();
+                            info("sending data error: " + e);
+                            return;
+                        }
+                    } else {
+                        return;
+                    }
+                default:
+            }
         }
-
     }
 
     @Override
@@ -150,22 +153,26 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         manager.disconnect(destKey, remoteChannel);
-        System.out.println(ctx.channel() + " channel inactive");
+        info("channel inactive");
     }
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        System.out.println(ctx.channel() + " channel unregistered");
+        info("channel unregistered");
     }
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        System.out.println(ctx.channel() + " channel registered");
+        info("channel registered");
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println(ctx.channel() + " channel active");
+        info("channel active");
+    }
+
+    private void info(String message) {
+        logger.info("{} - " + message, destKey);
     }
 
     private enum State {

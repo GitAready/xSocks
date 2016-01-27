@@ -33,16 +33,15 @@ public class AsyncSocketChannelFactory implements PooledObjectFactory<Asynchrono
     @Override
     public PooledObject<AsynchronousSocketChannel> makeObject() throws Exception {
         try {
-            logger.debug("Creating new Socket for {}", destKey);
+            logger.debug("{} - Creating new socket", destKey);
 
             AsynchronousSocketChannel channel = AsynchronousSocketChannel.open(group);
             channel.connect(new InetSocketAddress(destKey.getAddress(), destKey.getPort())).get();
 
             PooledObject<AsynchronousSocketChannel> o = new PooledChannel(destKey, channel);
-            logger.debug("Creating new Socket for {} successfully", destKey);
             return o;
         } catch (IOException e) {
-            logger.error("Failed to create a Socket: {}", destKey);
+            logger.error("{} - Failed to create a socket", destKey);
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
@@ -54,9 +53,9 @@ public class AsyncSocketChannelFactory implements PooledObjectFactory<Asynchrono
         try {
             AsynchronousSocketChannel channel = p.getObject();
             channel.close();
-            logger.debug("Destroyed Socket successfully: {}", pooledChannel.getDestKey());
+            logger.debug("{} - Destroyed socket successfully", pooledChannel.getDestKey());
         } catch (IOException e) {
-            logger.error("Failed to destroy the Socket: {}", pooledChannel.getDestKey());
+            logger.error("{} - Failed to destroy the socket", pooledChannel.getDestKey());
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
@@ -69,11 +68,11 @@ public class AsyncSocketChannelFactory implements PooledObjectFactory<Asynchrono
 
     @Override
     public void activateObject(PooledObject<AsynchronousSocketChannel> p) throws Exception {
-        System.out.println("Activate Object " + p);
+        //System.out.println("Activate Object " + p);
     }
 
     @Override
     public void passivateObject(PooledObject<AsynchronousSocketChannel> p) throws Exception {
-        System.out.println("Passivate Object " + p);
+        //System.out.println("Passivate Object " + p);
     }
 }
