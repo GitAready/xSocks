@@ -47,7 +47,7 @@ public class RemoteReadHandler implements CompletionHandler<Integer, ByteBuffer>
 
     @Override
     public void failed(Throwable exc, ByteBuffer attachment) {
-        logger.error("{} - read error:", destKey);
-        logger.error("", exc);
+        logger.error("{} - read error: {}", destKey, exc.getMessage());
+        logger.error(exc.getMessage(), exc);
     }
 }
