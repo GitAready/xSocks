@@ -20,15 +20,20 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf buf = (ByteBuf) msg;
+
+        // mark it in case it's unknown protocol
         buf.markReaderIndex();
         int version = buf.readUnsignedByte();
+
         if (version == Socks.V4) {
             ctx.pipeline().addLast(Socks4Handler.class.getName(), new Socks4Handler());
+            ctx.pipeline().remove(this);
         } else if (version == Socks.V5) {
             ctx.pipeline().addLast(Socks5Handler.class.getName(), new Socks5Handler());
+            ctx.pipeline().remove(this);
+        } else {
+            buf.resetReaderIndex();
         }
-        buf.resetReaderIndex();
-        ctx.pipeline().remove(this);
 
         ctx.fireChannelRead(msg);
     }

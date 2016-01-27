@@ -37,9 +37,8 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
             ByteBuf b = ctx.alloc().buffer();
             switch (state) {
                 case METHOD_SELECT:
-                    if (buf.readableBytes() <= 2)
+                    if (buf.readableBytes() <= 1)
                         return;
-                    buf.readByte(); // version
                     byte methods = buf.readByte();
                     if (methods > buf.readableBytes())
                         return;
