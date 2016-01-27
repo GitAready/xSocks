@@ -78,7 +78,7 @@ public class Message {
         byte[] buf = new byte[1024];
         int length;
         while ((length = byteBuf.readableBytes()) > 0) {
-            if(length > buf.length) length = buf.length;
+            if (length > buf.length) length = buf.length;
             byteBuf.readBytes(buf, 0, length);
             this.buffer.write(buf, 0, length);
         }

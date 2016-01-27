@@ -7,8 +7,7 @@ package net.iampaddy.socks;
  */
 public class Context {
 
-    private String id;
-
     public int port;
+    private String id;
 
 }

@@ -5,7 +5,6 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.Map;
@@ -32,7 +31,7 @@ public final class SocketManager {
         channels = new ConcurrentHashMap<>();
         lock = new ReentrantLock();
         try {
-            ExecutorService executor = Executors.newCachedThreadPool( new NamedThreadFactory("Forwarder"));
+            ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("Forwarder"));
             group = AsynchronousChannelGroup.withCachedThreadPool(executor, 5);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -54,7 +53,11 @@ public final class SocketManager {
 
     public boolean disconnect(DestKey key, AsynchronousSocketChannel socket) {
         GenericObjectPool<AsynchronousSocketChannel> pool = getPool(key);
-        pool.returnObject(socket);
+        try {
+            pool.invalidateObject(socket);
+        } catch (Exception e) {
+            // ignore
+        }
         return true;
     }
 

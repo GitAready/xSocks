@@ -170,9 +170,9 @@
 
         <!-- Other Library -->
         <!--<dependency>-->
-            <!--<groupId>com.alibaba</groupId>-->
-            <!--<artifactId>fastjson</artifactId>-->
-            <!--<version>${version.fastjson}</version>-->
+        <!--<groupId>com.alibaba</groupId>-->
+        <!--<artifactId>fastjson</artifactId>-->
+        <!--<version>${version.fastjson}</version>-->
         <!--</dependency>-->
         <dependency>
             <groupId>org.mongodb</groupId>
@@ -209,8 +209,8 @@
     </properties>
 
     <organization>
-        <name>Paddy</name>
-        <url>http://iampaddy.net</url>
+        <name>Paddy Xie</name>
+        <url>http://hipaddy.com</url>
     </organization>
 
 </project>

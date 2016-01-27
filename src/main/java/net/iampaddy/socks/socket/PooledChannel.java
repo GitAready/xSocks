@@ -2,8 +2,6 @@ package net.iampaddy.socks.socket;
 
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import java.net.Socket;
-import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 
 /**
