@@ -37,23 +37,23 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
             ByteBuf b = ctx.alloc().buffer();
             switch (state) {
                 case METHOD_SELECT:
-                    if (buf.readableBytes() <= 1)
-                        return;
+                    // auth method number
                     byte methods = buf.readByte();
-                    if (methods > buf.readableBytes())
-                        return;
+                    // auth method types
                     byte[] methodArray = new byte[methods];
                     buf.readBytes(methodArray);
 
+                    // for now, skip method
                     b.writeByte(Socks.V5);
                     b.writeByte(Socks.METHOD_NO_AUTH);
-                    // method processing
+
                     ctx.writeAndFlush(b);
                     buf.release();
+
                     method = methodArray[0];
                     state = method == Socks.METHOD_NO_AUTH ? State.REQUEST : State.METHOD_PROCESS;
 
-                    info("socks method selected");
+                    logger.debug("socks auth method selected");
                     break;
                 case METHOD_PROCESS:
                     if (method == Socks.METHOD_NO_AUTH) {
@@ -62,8 +62,8 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                     }
                     break;
                 case REQUEST:
-                    if (buf.readableBytes() < 4)
-                        return;
+                    if (buf.readableBytes() < 8) return;
+
                     buf.readByte(); // version
                     byte cmd = buf.readByte();
                     buf.readByte(); // reserved
@@ -73,7 +73,6 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                     switch (atype) {
                         case Socks.ATYP_IP_V4:
                             buffer = new byte[4];
-                            buf.readBytes(buffer);
                             break;
                         case Socks.ATYP_HOSTNAME:
                             short length = buf.readUnsignedByte();
@@ -121,18 +120,19 @@ public class Socks5Handler extends ChannelInboundHandlerAdapter {
                     state = State.CONNECT;
                     final ByteBuffer byteBuffer = ByteBuffer.allocate(10240);
                     remoteChannel.read(byteBuffer, byteBuffer, new RemoteReadHandler(destKey, ctx, remoteChannel));
-                    info("socks request completed");
+                    logger.debug("{} - socks request completed", destKey);
                     break;
                 case CONNECT:
                     if (buf.readableBytes() > 0) {
                         try {
-                            info("sending data " + buf.readableBytes());
+                            logger.debug("{} - sending data {}", destKey, buf.readableBytes());
                             remoteChannel.write(buf.nioBuffer()).get();
                             buf.clear();
                             buf.release();
                         } catch (Exception e) {
                             ctx.close();
-                            info("sending data error: " + e);
+                            logger.error("{} - sending data error: {}", destKey, e.getMessage());
+                            logger.error(e.getMessage(), e);
                             return;
                         }
                     } else {

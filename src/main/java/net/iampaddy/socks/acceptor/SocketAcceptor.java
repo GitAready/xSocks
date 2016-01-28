@@ -7,8 +7,10 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.ssl.SslHandler;
 import net.iampaddy.socks.NamedThreadFactory;
 import net.iampaddy.socks.handler.ProtocolHandler;
+import net.iampaddy.socks.server.XSocksHandler;
 import org.bouncycastle.crypto.tls.TlsProtocolHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +40,8 @@ public class SocketAcceptor implements Acceptor {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         logger.debug("A new Socket connected " + socketChannel);
-                        socketChannel.pipeline().addFirst("", new SslHandler());
-                        socketChannel.pipeline()
-                                .addLast(ProtocolHandler.class.getName(), new ProtocolHandler());
+//                        socketChannel.pipeline().addFirst("", new SslHandler(null));
+                        socketChannel.pipeline().addLast("XSocksHandler", new XSocksHandler());
                     }
                 })
                 .childOption(ChannelOption.TCP_NODELAY, true);
