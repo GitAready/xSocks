@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <appender name="Mongo" class="net.iampaddy.socks.log.MongoAppender">
+    <appender name="Mongo" class="com.github.xsocks.log.MongoAppender">
         <host>localhost</host>
         <port>27017</port>
         <database>xSocks</database>
