@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 /**
  * Created by pxie on 1/29/16.
  */
-public class InVMAcceptor implements Acceptor {
+public class InVMAcceptor extends AbstractAcceptor {
 
     private InVMConnector connector;
 

@@ -2,6 +2,8 @@ package com.github.xsocks.core;
 
 import io.netty.buffer.ByteBuf;
 import com.github.xsocks.acceptor.Acceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -14,6 +16,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by Paddy on 2016/1/26.
  */
 public final class DataForwarder {
+
+    private Logger logger = LoggerFactory.getLogger(DataForwarder.class);
 
     private static final DataForwarder forwarder = new DataForwarder();
     private Lock lock;
@@ -45,12 +49,20 @@ public final class DataForwarder {
         lock.unlock();
     }
 
-    public void forwardToRemote(Session session, ByteBuf buffer) {
-
+    public void forwardToRemote(Session session, ByteBuffer buffer) {
+        AsynchronousSocketChannel remoteChannel = remoteChannels.get(session);
+        if(remoteChannel == null) {
+            throw new RuntimeException("No Channel of session " + session + " was registered");
+        }
+        remoteChannel.write(buffer);
     }
 
-    public void forwardToProxy(Session session, ByteBuffer buffer) {
-
+    public void forwardToAgent(Session session, ByteBuffer buffer) {
+        Acceptor acceptor = acceptors.get(session);
+        if(acceptor == null) {
+            throw new RuntimeException("No Acceptor of session " + session + " was registered");
+        }
+        acceptor.write(session, buffer);
     }
 
 }

@@ -20,7 +20,7 @@ import java.nio.ByteBuffer;
  *
  * @author paddy.xie
  */
-public class SocketAcceptor implements Acceptor {
+public class SocketAcceptor extends AbstractAcceptor {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 

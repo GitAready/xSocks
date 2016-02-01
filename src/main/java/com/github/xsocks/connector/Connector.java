@@ -1,6 +1,7 @@
 package com.github.xsocks.connector;
 
 
+import com.github.xsocks.core.Session;
 import com.github.xsocks.socket.DestKey;
 import io.netty.buffer.ByteBuf;
 
@@ -15,7 +16,7 @@ public interface Connector {
 
     void disconnect();
 
-    void write(ByteBuf buffer);
+    void writeBack(Session session, ByteBuf buffer);
 
     boolean resolve(DestKey destKey);
 

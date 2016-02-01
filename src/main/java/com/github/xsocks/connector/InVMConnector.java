@@ -29,7 +29,7 @@ public class InVMConnector implements Connector {
     }
 
     @Override
-    public void write(ByteBuf buffer) {
+    public void writeBack(Session session, ByteBuf buffer) {
 
     }
 
@@ -40,10 +40,6 @@ public class InVMConnector implements Connector {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public Session createSession() {
-
     }
 
 }

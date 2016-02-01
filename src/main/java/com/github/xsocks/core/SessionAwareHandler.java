@@ -21,6 +21,20 @@ public class SessionAwareHandler extends ChannelInboundHandlerAdapter {
         ByteBuf buffer = (ByteBuf) msg;
         for (; ; ) {
             switch (status) {
+                case COMMAND:
+                    byte cmd = buffer.readByte();
+                    switch(cmd) {
+                        case 0x01:
+                            break;
+                        case 0x02:
+                            status = Status.SESSION;
+                            break;
+                        case 0x03:
+                            break;
+                        default:
+
+                    }
+
                 case SESSION:
                     // 10 byte session id, 4 byte payload length
                     if (buffer.readableBytes() < 14) {
@@ -52,7 +66,12 @@ public class SessionAwareHandler extends ChannelInboundHandlerAdapter {
     }
 
     enum Status {
-        SESSION, DATA_TRANS
+        // 1 byte cmd, 0x01 create session, 0x02 data transfer, 0x03 destroy session
+        COMMAND,
+        // 10 byte session id, 4 byte payload length
+        SESSION,
+        // all data
+        DATA_TRANS
     }
 
 }

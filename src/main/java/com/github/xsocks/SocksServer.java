@@ -24,7 +24,6 @@ public class SocksServer {
         acceptor.setAddress("localhost");
         acceptor.setPort(8778);
         acceptor.accept();
-
     }
 
 }

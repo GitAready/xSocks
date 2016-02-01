@@ -1,6 +1,7 @@
 package com.github.xsocks.connector;
 
 import com.github.xsocks.NamedThreadFactory;
+import com.github.xsocks.core.Session;
 import com.github.xsocks.socket.DestKey;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -27,7 +28,7 @@ public class SocketConnector implements Connector {
         workerGroup = new NioEventLoopGroup(worker, new NamedThreadFactory("DataForwarder"));
 
         Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(workerGroup)
+        bootstrap.group(workerGroup);
 
 
 
@@ -40,7 +41,7 @@ public class SocketConnector implements Connector {
     }
 
     @Override
-    public void write(ByteBuf buffer) {
+    public void writeBack(Session session, ByteBuf buffer) {
 
     }
 

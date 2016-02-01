@@ -1,5 +1,6 @@
 package com.github.xsocks.socket;
 
+import com.github.xsocks.core.DataForwarder;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
@@ -17,20 +18,19 @@ public class RemoteReadHandler implements CompletionHandler<Integer, ByteBuffer>
     private Logger logger = LoggerFactory.getLogger(RemoteReadHandler.class);
 
     private DestKey destKey;
-    private ChannelHandlerContext context;
     private AsynchronousSocketChannel remoteChannel;
 
-    public RemoteReadHandler(DestKey destKey, ChannelHandlerContext ctx, AsynchronousSocketChannel remoteChannel) {
+    public RemoteReadHandler(DestKey destKey, AsynchronousSocketChannel remoteChannel) {
         this.destKey = destKey;
-        this.context = ctx;
         this.remoteChannel = remoteChannel;
     }
 
     @Override
     public void completed(Integer result, ByteBuffer buffer) {
+        DataForwarder forwarder = DataForwarder.getInstance();
         if (result == -1) {
             SocketManager.getInstance().disconnect(destKey, remoteChannel);
-            context.close();
+            forwarder.unregister();
             logger.info("{} - remote channel closed", destKey);
             return;
         }

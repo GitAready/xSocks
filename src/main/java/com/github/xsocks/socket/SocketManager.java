@@ -32,7 +32,7 @@ public final class SocketManager {
         lock = new ReentrantLock();
         try {
             ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("Forwarder"));
-            group = AsynchronousChannelGroup.withCachedThreadPool(executor, 5);
+            group = AsynchronousChannelGroup.withCachedThreadPool(executor, 20);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
