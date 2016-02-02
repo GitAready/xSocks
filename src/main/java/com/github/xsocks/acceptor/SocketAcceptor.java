@@ -8,12 +8,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import com.github.xsocks.NamedThreadFactory;
-import com.github.xsocks.core.Session;
-import com.github.xsocks.core.XSocksHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.ByteBuffer;
 
 /**
  * Description here
@@ -62,11 +58,6 @@ public class SocketAcceptor extends AbstractAcceptor {
     public void close() {
         acceptorGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
-    }
-
-    @Override
-    public void write(Session session, ByteBuffer buffer) {
-        session.sendToProxy(buffer);
     }
 
     @Override

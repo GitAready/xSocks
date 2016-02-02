@@ -1,5 +1,6 @@
-package com.github.xsocks.core;
+package com.github.xsocks.acceptor;
 
+import com.github.xsocks.core.SessionAwareHandler;
 import com.github.xsocks.protocol.Socks;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;

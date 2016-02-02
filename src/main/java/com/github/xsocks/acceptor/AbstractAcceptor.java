@@ -20,6 +20,11 @@ public abstract class AbstractAcceptor implements Acceptor {
         return clientMap.putIfAbsent(session, context) == null;
     }
 
+    public void removeSession(Session session) {
+        ChannelHandlerContext context = clientMap.get(session);
+        context.close();
+    }
+
     @Override
     public void write(Session session, ByteBuffer buffer) {
         ChannelHandlerContext context = clientMap.get(session);
@@ -28,6 +33,7 @@ public abstract class AbstractAcceptor implements Acceptor {
         }
 
         ByteBuf byteBuf = context.alloc().buffer(buffer.capacity());
+        byteBuf.writeBytes(buffer);
         context.writeAndFlush(byteBuf);
     }
 }

@@ -21,14 +21,8 @@ public class Session {
 
     private String remoteAddress;
 
-
-    private ChannelHandlerContext context;
-
-    private AsynchronousSocketChannel remoteChannel;
-
-    protected Session(String sessionId, ChannelHandlerContext context) {
+    protected Session(String sessionId) {
         this.sessionId = sessionId;
-        this.context = context;
     }
 
     public String getSessionId() {
@@ -49,36 +43,6 @@ public class Session {
 
     public void setCreatedOn(long createdOn) {
         this.createdOn = createdOn;
-    }
-
-    public ChannelHandlerContext getContext() {
-        return context;
-    }
-
-    public AsynchronousSocketChannel getRemoteChannel() {
-        return remoteChannel;
-    }
-
-    public void setRemoteChannel(AsynchronousSocketChannel remoteChannel) {
-        this.remoteChannel = remoteChannel;
-    }
-
-    public int sendToRemote(ByteBuf byteBuf, int length) {
-        int lengthToWrite = byteBuf.readableBytes() > length ? length : byteBuf.readableBytes();
-
-        remoteChannel.write(byteBuf.nioBuffer(byteBuf.readerIndex(), lengthToWrite));
-
-        logger.debug("{} - Forwarded {} bytes to {}", sessionId, lengthToWrite, remoteChannel);
-
-        byteBuf.skipBytes(lengthToWrite);
-        return lengthToWrite;
-    }
-
-    public void sendToProxy(ByteBuffer byteBuffer) {
-        ByteBuf buffer = context.alloc().buffer(byteBuffer.remaining());
-        byteBuffer.flip();
-        buffer.writeBytes(byteBuffer);
-        context.writeAndFlush(buffer);
     }
 
 }

@@ -49,6 +49,10 @@ public final class DataForwarder {
         lock.unlock();
     }
 
+    public Acceptor getAcceptor(Session session) {
+        return acceptors.get(session);
+    }
+
     public void forwardToRemote(Session session, ByteBuffer buffer) {
         AsynchronousSocketChannel remoteChannel = remoteChannels.get(session);
         if(remoteChannel == null) {
