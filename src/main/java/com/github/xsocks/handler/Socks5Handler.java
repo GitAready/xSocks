@@ -118,7 +118,7 @@ public class Socks5Handler extends SocksHandler {
                     break;
                 case CONNECT:
                     if (buf.readableBytes() > 0) {
-                        connector.write(buf);
+                        connector.writeTo(buf);
                     } else {
                         return;
                     }

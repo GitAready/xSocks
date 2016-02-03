@@ -23,7 +23,7 @@ public class InVMAcceptor extends AbstractAcceptor {
     }
 
     @Override
-    public void write(Session session, ByteBuffer buffer) {
+    public void writeBack(Session session, ByteBuffer buffer) {
 
     }
 

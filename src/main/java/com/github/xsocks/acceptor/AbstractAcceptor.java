@@ -26,7 +26,7 @@ public abstract class AbstractAcceptor implements Acceptor {
     }
 
     @Override
-    public void write(Session session, ByteBuffer buffer) {
+    public void writeBack(Session session, ByteBuffer buffer) {
         ChannelHandlerContext context = clientMap.get(session);
         if(context == null) {
             throw new RuntimeException("No agent channel found for session " + session);
@@ -35,5 +35,11 @@ public abstract class AbstractAcceptor implements Acceptor {
         ByteBuf byteBuf = context.alloc().buffer(buffer.capacity());
         byteBuf.writeBytes(buffer);
         context.writeAndFlush(byteBuf);
+    }
+
+    @Override
+    public void closeSession(Session session) {
+        ChannelHandlerContext ctx = clientMap.remove(session);
+        ctx.close();
     }
 }

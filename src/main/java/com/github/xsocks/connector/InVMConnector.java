@@ -29,7 +29,7 @@ public class InVMConnector implements Connector {
     }
 
     @Override
-    public void writeBack(Session session, ByteBuf buffer) {
+    public void writeTo(Session session, ByteBuf buffer) {
 
     }
 

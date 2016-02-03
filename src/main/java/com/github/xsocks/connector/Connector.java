@@ -16,7 +16,7 @@ public interface Connector {
 
     void disconnect();
 
-    void writeBack(Session session, ByteBuf buffer);
+    void writeTo(Session session, ByteBuf buffer);
 
     boolean resolve(DestKey destKey);
 

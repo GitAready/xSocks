@@ -1,13 +1,18 @@
 package com.github.xsocks.core;
 
-import io.netty.buffer.ByteBuf;
 import com.github.xsocks.acceptor.Acceptor;
+import com.github.xsocks.socket.DestKey;
+import com.github.xsocks.socket.SocketManager;
+import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -20,12 +25,21 @@ public final class DataForwarder {
     private Logger logger = LoggerFactory.getLogger(DataForwarder.class);
 
     private static final DataForwarder forwarder = new DataForwarder();
+
+    private ForwardCallback forwardCallback;
+
     private Lock lock;
     private Map<Session, Acceptor> acceptors;
     private Map<Session, AsynchronousSocketChannel> remoteChannels;
 
+    private SocketManager socketManager = SocketManager.getInstance();
+    private SessionManager sessionManager = SessionManager.getInstance();
+
     private DataForwarder() {
         lock = new ReentrantLock(true);
+
+        forwardCallback = new ForwardCallback(this);
+
         acceptors = new HashMap<>();
         remoteChannels = new HashMap<>();
     }
@@ -34,39 +48,97 @@ public final class DataForwarder {
         return forwarder;
     }
 
-    public boolean register(Session session, Acceptor ctx, AsynchronousSocketChannel channel) {
+    public Session register(Acceptor ctx, DestKey destKey) {
         lock.lock();
-        acceptors.put(session, ctx);
-        remoteChannels.put(session, channel);
-        lock.unlock();
-        return true;
+        try {
+            Session session = sessionManager.createSession(destKey);
+
+            AsynchronousSocketChannel dest = socketManager.connect(destKey);
+
+            ByteBuffer byteBuffer = ByteBuffer.allocate(10240);
+            dest.read(byteBuffer, byteBuffer, new ReceiveCallback(this, session, dest));
+
+            acceptors.put(session, ctx);
+            remoteChannels.put(session, dest);
+
+            return session;
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void unregister(Session session) {
         lock.lock();
-        acceptors.remove(session);
-        remoteChannels.remove(session);
-        lock.unlock();
+        try {
+            acceptors.remove(session);
+            sessionManager.invalidateSession(session.getSessionId());
+            AsynchronousSocketChannel channel = remoteChannels.remove(session);
+            channel.close();
+        } catch (IOException e) {
+            // ignore
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void unregister(Acceptor acceptor) {
+        lock.lock();
+        try {
+            List<Session> sessionsToUnregister = new ArrayList<>();
+            for(Map.Entry<Session, Acceptor> entry : acceptors.entrySet()) {
+                if(entry.getKey().equals(acceptor)) {
+                    sessionsToUnregister.add(entry.getKey());
+                }
+            }
+
+            for(Session session : sessionsToUnregister) {
+                unregister(session);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void broken(Session session) {
+        lock.lock();
+        try {
+            Acceptor acceptor = acceptors.get(session);
+            unregister(session);
+            acceptor.closeSession(session);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public Acceptor getAcceptor(Session session) {
         return acceptors.get(session);
     }
 
-    public void forwardToRemote(Session session, ByteBuffer buffer) {
+    public int forwardToRemote(Session session, ByteBuf byteBuf) {
+        return forwardToRemote(session, byteBuf, byteBuf.readableBytes());
+    }
+
+    public int forwardToRemote(Session session, ByteBuf byteBuf, int length) {
         AsynchronousSocketChannel remoteChannel = remoteChannels.get(session);
-        if(remoteChannel == null) {
+        if (remoteChannel == null) {
             throw new RuntimeException("No Channel of session " + session + " was registered");
         }
-        remoteChannel.write(buffer);
+
+        int lengthToWrite = byteBuf.readableBytes() > length ? length : byteBuf.readableBytes();
+        remoteChannel.write(byteBuf.nioBuffer(byteBuf.readerIndex(), lengthToWrite), session, forwardCallback);
+
+        byteBuf.skipBytes(lengthToWrite);
+
+        logger.trace("{} - Forwarded {} bytes to {}", session.getSessionId(), lengthToWrite, remoteChannel);
+
+        return lengthToWrite;
     }
 
     public void forwardToAgent(Session session, ByteBuffer buffer) {
         Acceptor acceptor = acceptors.get(session);
-        if(acceptor == null) {
+        if (acceptor == null) {
             throw new RuntimeException("No Acceptor of session " + session + " was registered");
         }
-        acceptor.write(session, buffer);
+        acceptor.writeBack(session, buffer);
     }
-
 }

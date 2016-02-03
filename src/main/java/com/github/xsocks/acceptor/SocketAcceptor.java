@@ -1,5 +1,7 @@
 package com.github.xsocks.acceptor;
 
+import com.github.xsocks.NamedThreadFactory;
+import com.github.xsocks.core.DataForwarder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -7,7 +9,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import com.github.xsocks.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,8 @@ public class SocketAcceptor extends AbstractAcceptor {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         logger.debug("A new Socket connected " + socketChannel);
 //                        socketChannel.pipeline().addFirst("", new SslHandler(null));
-                        socketChannel.pipeline().addLast("XSocksHandler", new XSocksHandler());
+                        socketChannel.pipeline().addLast("XSocksRegisterHandler", new XSocksRegisterHandler());
+                        socketChannel.pipeline().addLast("XSocksProcessHandler", new XSocksProcessHandler(SocketAcceptor.this));
                     }
                 })
                 .childOption(ChannelOption.TCP_NODELAY, true);
@@ -58,6 +60,8 @@ public class SocketAcceptor extends AbstractAcceptor {
     public void close() {
         acceptorGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
+
+        DataForwarder.getInstance();
     }
 
     @Override

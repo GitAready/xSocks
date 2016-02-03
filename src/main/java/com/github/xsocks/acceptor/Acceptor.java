@@ -15,7 +15,9 @@ public interface Acceptor {
 
     void close();
 
-    void write(Session session, ByteBuffer buffer);
+    void writeBack(Session session, ByteBuffer buffer);
+
+    void closeSession(Session session);
 
     boolean isRemote();
 

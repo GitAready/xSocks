@@ -1,12 +1,10 @@
 package com.github.xsocks.core;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
+import com.github.xsocks.socket.DestKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousSocketChannel;
+import java.util.Date;
 
 /**
  * Created by pxie on 1/28/16.
@@ -19,10 +17,13 @@ public class Session {
     private long createdOn;
     private long lastAccess;
 
-    private String remoteAddress;
+    private DestKey destKey;
 
-    protected Session(String sessionId) {
+    protected Session(String sessionId, DestKey destKey) {
         this.sessionId = sessionId;
+        this.createdOn = System.currentTimeMillis();
+        this.lastAccess = System.currentTimeMillis();
+        this.destKey = destKey;
     }
 
     public String getSessionId() {
@@ -45,4 +46,15 @@ public class Session {
         this.createdOn = createdOn;
     }
 
+    public DestKey getDestKey() {
+        return destKey;
+    }
+
+    public void setDestKey(DestKey destKey) {
+        this.destKey = destKey;
+    }
+
+    public String toString() {
+        return "Destination: " + destKey + "    Last Access: " + new Date(lastAccess);
+    }
 }

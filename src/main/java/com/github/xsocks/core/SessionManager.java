@@ -1,5 +1,6 @@
 package com.github.xsocks.core;
 
+import com.github.xsocks.socket.DestKey;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.io.IOException;
@@ -29,12 +30,12 @@ public final class SessionManager {
         return sessions.get(sessionId);
     }
 
-    public Session createSession(ChannelHandlerContext context) {
+    public Session createSession(DestKey destKey) {
         String sessionId;
         Session session;
         while (true) {
             sessionId = SessionIdGenerator.generate();
-            session = new Session(sessionId, context);
+            session = new Session(SessionIdGenerator.generate(), destKey);
 
             Session shouldBeNull = sessions.putIfAbsent(sessionId, session);
             if (shouldBeNull == null) {
@@ -47,13 +48,6 @@ public final class SessionManager {
     public void invalidateSession(String sessionId) {
         Session session = sessions.remove(sessionId);
         if (session != null) {
-            AsynchronousSocketChannel remoteChannel = session.getRemoteChannel();
-            try {
-                if (remoteChannel != null)
-                    remoteChannel.close();
-            } catch (IOException e) {
-                // ignore
-            }
             return;
         }
         throw new RuntimeException("Unknown session with id " + sessionId);

@@ -1,6 +1,5 @@
 package com.github.xsocks.acceptor;
 
-import com.github.xsocks.core.SessionAwareHandler;
 import com.github.xsocks.protocol.Socks;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,9 +13,9 @@ import java.net.SocketAddress;
 /**
  * Created by pxie on 1/28/16.
  */
-public class XSocksHandler extends ChannelInboundHandlerAdapter {
+public class XSocksRegisterHandler extends ChannelInboundHandlerAdapter {
 
-    private Logger logger = LoggerFactory.getLogger(XSocksHandler.class);
+    private Logger logger = LoggerFactory.getLogger(XSocksRegisterHandler.class);
 
     private static final byte METHOD_SELECTION = Socks.METHOD_NO_AUTH;
 
@@ -81,7 +80,6 @@ public class XSocksHandler extends ChannelInboundHandlerAdapter {
                     ctx.writeAndFlush(result);
 
                     ctx.pipeline().remove(this);
-                    ctx.pipeline().addLast("SessionAwareHandler", new SessionAwareHandler());
 
                     ctx.fireChannelRead(msg);
                 } else {
