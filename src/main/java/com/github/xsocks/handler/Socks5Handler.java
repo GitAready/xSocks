@@ -1,5 +1,6 @@
 package com.github.xsocks.handler;
 
+import com.github.xsocks.core.EventDispatcher;
 import com.github.xsocks.socket.DestKey;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -24,6 +25,8 @@ public class Socks5Handler extends SocksHandler {
 
     private DestKey destKey;
     private Connector connector;
+
+    private EventDispatcher dispatcher = EventDispatcher.getInstance();
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -118,7 +121,7 @@ public class Socks5Handler extends SocksHandler {
                     break;
                 case CONNECT:
                     if (buf.readableBytes() > 0) {
-                        connector.writeTo(buf);
+                        //connector.writeTo(buf);
                     } else {
                         return;
                     }
@@ -134,7 +137,7 @@ public class Socks5Handler extends SocksHandler {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        manager.disconnect(destKey, remoteChannel);
+        //manager.disconnect(destKey, remoteChannel);
         info("channel inactive");
     }
 
