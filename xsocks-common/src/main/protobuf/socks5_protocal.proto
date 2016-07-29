@@ -1,0 +1,36 @@
+package Socks5;
+
+option java_package = "com.github.xsocks.proto";
+option java_outer_classname = "Socks5";
+
+message AuthRequest {
+    required uint32 version = 1;
+    repeated AuthMethod methods = 2;
+}
+
+message AuthResponse {
+    required uint32 version = 1;
+    required AuthMethod method = 2;
+}
+
+enum AuthMethod {
+    NO_AUTH = 1;
+    GSSAPI = 2;
+    PASSWORD = 3;
+}
+
+message ConnectionRequest {
+    required uint32 version = 1;
+    required uint32 command = 2;
+    required uint32 address_type = 3;
+    required bytes address = 4;
+    required bytes port = 5;
+}
+
+message ConnectionResponse {
+    required uint32 version = 1;
+    required uint32 status = 2;
+    required uint32 address_type = 3;
+    required bytes address = 4;
+    required bytes port = 5;
+}

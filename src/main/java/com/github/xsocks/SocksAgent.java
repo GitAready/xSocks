@@ -47,7 +47,7 @@ public class SocksAgent {
     public static void main(String[] args) {
         Properties prop = new Properties();
 
-        try (InputStream is = SocksAgent.class.getResourceAsStream("/xsocks.conf")) {
+        try (InputStream is = SocksAgent.class.getResourceAsStream("/src/main/conf/xsocks.conf")) {
             prop.load(is);
         } catch (IOException e) {
             throw new RuntimeException("Loading conf file failed...");
